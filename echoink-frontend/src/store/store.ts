@@ -18,8 +18,9 @@ export type Post = {
     email: string,
     id: string,
     image_link: string,
-    username: string
+    username: string,
 }
+tags : ['science','maths']
 };
 
 // Define a Recoil atom to store the posts
