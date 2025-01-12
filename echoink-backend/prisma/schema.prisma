@@ -26,6 +26,7 @@ model Post{
   is_edited Boolean @default(false)
   last_edited DateTime @default(now())
   image_link String @default("")
+  tags String[]
   user_id String
   User User @relation(fields: [user_id],references: [id])
 }

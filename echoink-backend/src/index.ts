@@ -17,14 +17,16 @@ import {
   authCreds,
   userAuth
 } from './userMiddleware';
-import { Prisma } from '@prisma/client';
-
+import { cors } from 'hono/cors';
 const app = new Hono<{
   Bindings: {
     DATABASE_URL: string,
     JWT_SECRET: string
   }
 }>()
+
+
+app.use(cors())
 
 app.get('/', async (c) => {
   return c.render(homepage);
@@ -145,7 +147,29 @@ app.post('/signin', userCredsValidation, authCreds, async (c) => {
 app.get('/getbulk', async (c) => {
   try {
     const prisma = await getPrismaClient(c);
-    const posts = await prisma.post.findMany()
+    const posts = await prisma.post.findMany({
+      select : {
+        id : true,
+        created_at : true,
+        description : true,
+        image_link : true,
+        is_edited : true,
+        last_edited : true,
+        title : true,
+        tags : true,
+        User : {
+          select : {
+            _count : true,
+            created_at : true,
+            email : true,
+            id : true,
+            image_link : true,
+            username : true
+          }
+        },
+        user_id : true
+      }
+    })
     return c.json({
       posts,
       posts_count: posts.length,
@@ -166,7 +190,8 @@ app.post('/createpost', userAuth, async (c) => {
       const {
         title,
         description,
-        image_link
+        image_link,
+        tags
       } = await c.req.json();
 
       if (!title && !description) {
@@ -184,6 +209,11 @@ app.post('/createpost', userAuth, async (c) => {
           msg: "title required",
           success: false
         })
+      }else if(!tags){
+        return c.json({
+          msg: "tags required",
+          success: false
+        })
       }
 
       //@ts-ignore
@@ -196,7 +226,8 @@ app.post('/createpost', userAuth, async (c) => {
           description,
           //@ts-ignore
           user_id: userId,
-          image_link
+          image_link,
+          tags
         },
         select: {
           id: true,
@@ -207,6 +238,7 @@ app.post('/createpost', userAuth, async (c) => {
           created_at: true,
           is_edited: true,
           last_edited: true,
+          tags : true,
           User: {
             select: {
               _count: true,
@@ -356,7 +388,7 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
           //@ts-ignore
           user_id: userId,
           image_link,
-          is_edited : true,
+          is_edited: true,
         },
         select: {
           id: true,
