@@ -1,6 +1,6 @@
 import { Context, Next } from "hono";import bcrypt from "bcryptjs";
 import z from "zod"
-import { sign } from "hono/jwt";
+import { sign, verify } from "hono/jwt";
 import { JWTPayload } from "hono/utils/jwt/types";
 import { getPrismaClient } from "../prisma/prismaClient";
 
@@ -74,6 +74,27 @@ export const authCreds = async(c:Context,next:Next)=>{
     }else{
         return c.json({
             msg : "FATAL : user not found",success : false
+        })
+    }
+}
+
+
+export const userAuth = async(c:Context,next:Next)=>{
+    const authorization = await c.req.header('Authorization')
+    const token = authorization?.split(" ")[1]
+    if(token && token != ''){
+        try{
+            const user_id = await verify(token,c.env.JWT_SECRET)
+            c.set('userId',user_id)
+            await next()
+        }catch(e){
+            return c.json({
+                msg : "ERROR : Verifying token please try again!",success : false
+            })
+        }
+    }else{
+        return c.json({
+            msg : "FATAL : Auth failed please try again!",success : false
         })
     }
 }

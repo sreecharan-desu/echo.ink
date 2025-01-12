@@ -4,12 +4,17 @@ export const homepage = `
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
       <title>Welcome to echo.ink</title>
       <style>
         body {
           background: #000;
           color: #fff;
-          font-family: 'Poppins', sans-serif;
+          font-family: "Courier Prime", serif;
+          font-weight: 400;
+          font-style: normal;          
           text-align: center;
           margin: 0;
           padding: 0;
@@ -22,7 +27,6 @@ export const homepage = `
           font-size: 4rem;
           margin: 0;
           letter-spacing: 2px;
-          text-transform: uppercase;
           text-shadow: 2px 2px 5px rgba(255, 255, 255, 0.2);
         }
         hr {
@@ -76,7 +80,8 @@ export const homepage = `
     </html>
 `
 
-export const status_404 = `<!DOCTYPE html>
+export const status_404 = `
+<!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
@@ -86,7 +91,9 @@ export const status_404 = `<!DOCTYPE html>
         body {
           background: #000;
           color: #fff;
-          font-family: 'Poppins', sans-serif;
+          font-family: "Courier Prime", serif;
+          font-weight: 400;
+          font-style: normal;          
           text-align: center;
           margin: 0;
           padding: 0;
@@ -99,7 +106,6 @@ export const status_404 = `<!DOCTYPE html>
           font-size: 4rem;
           margin: 0;
           letter-spacing: 2px;
-          text-transform: uppercase;
           text-shadow: 2px 2px 5px rgba(255, 255, 255, 0.2);
         }
         hr {
