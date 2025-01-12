@@ -88,6 +88,7 @@ export const userAuth = async(c:Context,next:Next)=>{
             const user_id = await verify(token,c.env.JWT_SECRET)
             //@ts-ignore
             const user = await prisma.user.findUnique({where : {id : user_id}})
+            console.log(user)
             if(user && !(user?.username == username)) return c.json({msg : "AUTH FAILED : This is not your token!",success : false})
             c.set('userId',user_id)
             await next()

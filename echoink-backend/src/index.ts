@@ -17,6 +17,7 @@ import {
   authCreds,
   userAuth
 } from './userMiddleware';
+import { Prisma } from '@prisma/client';
 
 const app = new Hono<{
   Bindings: {
@@ -147,6 +148,7 @@ app.get('/getbulk', async (c) => {
     const posts = await prisma.post.findMany()
     return c.json({
       posts,
+      posts_count: posts.length,
       success: true
     })
   } catch (e) {
@@ -222,13 +224,12 @@ app.post('/createpost', userAuth, async (c) => {
         success: true
       })
     } catch (e) {
+      console.log(e)
       return c.json({
-        msg: "FATAL : title and description not found",
+        msg: "FATAL : error creating post please try again!",
         success: false
       })
     }
-
-
   } catch (e) {
     return c.json({
       msg: `error creating post`,
@@ -325,7 +326,6 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
         image_link
       } = await c.req.json();
       const postId = c.req.param('postId')
-
       const prisma = await getPrismaClient(c);
       const Post = await prisma.post.findFirst({
         where: {
@@ -333,6 +333,7 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
         }
       })
 
+      console.log(Post)
       if (!Post) {
         return c.json({
           msg: "FATAL : post not found",
@@ -342,7 +343,7 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
 
       //@ts-ignore
       const userId = c.get('userId');
-
+      console.log(userId)
       const post = await prisma.post.update({
         where: {
           //@ts-ignore
@@ -355,6 +356,7 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
           //@ts-ignore
           user_id: userId,
           image_link,
+          is_edited : true,
         },
         select: {
           id: true,
@@ -375,8 +377,9 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
         success: true
       })
     } catch (e) {
+      console.log(e)
       return c.json({
-        msg: "FATAL : title and description not found",
+        msg: "FATAL : postId not found",
         success: false
       })
     }
@@ -473,40 +476,61 @@ app.put('/updateprofile', userAuth, async (c) => {
   }
 })
 
-// app.post('/emailverification', userAuth, async (c) => {
-//   const { email } = await c.req.json();
-//   try {
-//     //@ts-ignore
-//     const userId = c.get('userId');
-//     const prisma = await getPrismaClient(c);
-//     //@ts-ignore
-//     const content = await returnLinktoVerify(userId,email)
-//     await sendEmail(email, "Regarding email verification",content)
-//     return c.json({
-//       msg: "Verification email sent please check you inbox/spam folder.", success: true
-//     })
-//   } catch (e) {
-//     return c.json({
-//       msg: "ERROR : Sending Verification email please try again!", success: false
-//     })
-//   }
+app.get('/post/:postId', async (c) => {
+  const postId = await c.req.param('postId');
+  const prisma = await getPrismaClient(c);
 
-// })
+  const post = await prisma.post.findFirst({
+    where: {
+      id: postId
+    }
+  })
 
-// app.put('/verifyemail', async (c) => {
-//   const { userId, email } = await c.req.query();
-//   const prisma = await getPrismaClient(c);
-//   const user = await prisma.user.update({
-//     where: {
-//       id: userId
-//     },
-//     data: {
-//       email
-//     }
-//   })
+  if (!post) {
+    return c.json({
+      msg: "The post you are trying to access doesn't exist!", success: false
+    })
+  }
 
-//   return c.render(verified)
-// })
+  return c.json({
+    post, success: true
+  })
+
+})
+
+app.get('/author/:userId', async (c) => {
+  const userId = await c.req.param('userId');
+  const prisma = await getPrismaClient(c);
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId
+    },
+    select: {
+      _count: true,
+      created_at: true,
+      email: true,
+      id: true,
+      image_link: true,
+      posts: {
+        select: {
+          created_at: true,
+          description: true,
+          id: true,
+          image_link: true,
+          is_edited: true,
+          last_edited: true,
+          title: true,
+          user_id: true
+        }
+      }
+    }
+  })
+
+  return c.json({
+    user, success: true
+  })
+
+})
 
 app.get('/*', async (c) => {
   return c.render(status_404)
