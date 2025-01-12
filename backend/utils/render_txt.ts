@@ -149,5 +149,5 @@ export const status_404 = `<!DOCTYPE html>
         <p class="tagline">The page you are trying to access doesn't exist.</p>
       </div>
       <div class="footer">© 2025 echo.ink. All rights reserved.</div>
-    </body>
-    </html>` 
+    </body></html>
+` 
