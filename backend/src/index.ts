@@ -1,5 +1,5 @@
 import { getPrismaClient } from '../prisma/prismaClient'
-import { Hono } from 'hono'; import { homepage } from '../utils/welcome_txt';
+import { Hono } from 'hono'; import { homepage, status_404 } from '../utils/render_txt';
 import { gnerateToken, hashPassword, usernameAvailability, userCredsValidation, authCreds } from './userMiddleware';
 
 const app = new Hono<{
@@ -76,6 +76,10 @@ app.post('/signin',userCredsValidation,authCreds,async(c) => {
   }
 })
 
+
+app.get('/*',async(c)=>{
+  return c.render(status_404)
+})
 
 
 
