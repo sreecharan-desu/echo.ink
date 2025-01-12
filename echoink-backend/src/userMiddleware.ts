@@ -81,13 +81,18 @@ export const authCreds = async(c:Context,next:Next)=>{
 
 export const userAuth = async(c:Context,next:Next)=>{
     const authorization = await c.req.header('Authorization')
+    const {username} = await c.req.json();const prisma = await getPrismaClient(c);
     const token = authorization?.split(" ")[1]
     if(token && token != ''){
         try{
             const user_id = await verify(token,c.env.JWT_SECRET)
+            //@ts-ignore
+            const user = await prisma.user.findUnique({where : {id : user_id}})
+            if(user && !(user?.username == username)) return c.json({msg : "AUTH FAILED : This is not your token!",success : false})
             c.set('userId',user_id)
             await next()
         }catch(e){
+            console.log(e)
             return c.json({
                 msg : "ERROR : Verifying token please try again!",success : false
             })

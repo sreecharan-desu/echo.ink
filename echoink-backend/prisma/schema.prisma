@@ -12,6 +12,7 @@ model User{
   id String @unique @default(uuid())  
   username String @unique
   password String
+  image_link String @default("")
   email String @default("-")
   created_at DateTime @default(now())
   posts Post[]
@@ -24,6 +25,7 @@ model Post{
   created_at DateTime @default(now())
   is_edited Boolean @default(false)
   last_edited DateTime @default(now())
+  image_link String @default("")
   user_id String
   User User @relation(fields: [user_id],references: [id])
 }

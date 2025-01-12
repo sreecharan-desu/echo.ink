@@ -1,6 +1,22 @@
-import { getPrismaClient } from '../prisma/prismaClient'
-import { Hono } from 'hono'; import { homepage, status_404 } from '../utils/render_txt';
-import { gnerateToken, hashPassword, usernameAvailability, userCredsValidation, authCreds, userAuth } from './userMiddleware';
+import {
+  getPrismaClient
+} from '../prisma/prismaClient';
+import {
+  Hono
+} from 'hono';
+import {
+  homepage,
+  status_404,
+  verified
+} from '../utils/render_txt';
+import {
+  gnerateToken,
+  hashPassword,
+  usernameAvailability,
+  userCredsValidation,
+  authCreds,
+  userAuth
+} from './userMiddleware';
 
 const app = new Hono<{
   Bindings: {
@@ -11,12 +27,14 @@ const app = new Hono<{
 
 app.get('/', async (c) => {
   return c.render(homepage);
-
 });
 
 app.post('/signup', userCredsValidation, usernameAvailability, async (c) => {
   try {
-    const { username, password } = await c.req.json()
+    const {
+      username,
+      password
+    } = await c.req.json()
     const prisma = await getPrismaClient(c);
     const hashed_password = await hashPassword(password);
 
@@ -24,39 +42,101 @@ app.post('/signup', userCredsValidation, usernameAvailability, async (c) => {
       data: {
         username: username,
         password: hashed_password,
+      },
+      select: {
+        _count: true,
+        created_at: true,
+        email: true,
+        id: true,
+        image_link: true,
+        posts: {
+          select: {
+            id: true,
+            created_at: true,
+            description: true,
+            is_edited: true,
+            last_edited: true,
+            title: true,
+            User: {
+              select: {
+                email: true,
+                id: true,
+                username: true
+              }
+            },
+            image_link: true,
+            user_id: true,
+          }
+        },
+        username: true
       }
     })
     //@ts-ignore
     const jwt_token = await gnerateToken(user.id, c.env.JWT_SECRET)
     return c.json({
-      token: jwt_token, success: true
+      token: jwt_token,
+      user,
+      success: true
     })
   } catch (e) {
     console.log(e)
     return c.json({
-      msg: "ERROR : can't create user", success: false
+      msg: "ERROR : can't create user",
+      success: false
     })
   }
 })
 
 app.post('/signin', userCredsValidation, authCreds, async (c) => {
   try {
-    const { username } = await c.req.json()
+    const {
+      username
+    } = await c.req.json()
     const prisma = await getPrismaClient(c);
     const user = await prisma.user.findUnique({
       where: {
         username
+      },
+      select: {
+        _count: true,
+        created_at: true,
+        email: true,
+        id: true,
+        image_link: true,
+        posts: {
+          select: {
+            id: true,
+            created_at: true,
+            description: true,
+            is_edited: true,
+            last_edited: true,
+            title: true,
+            User: {
+              select: {
+                email: true,
+                id: true,
+                username: true
+              }
+            },
+            user_id: true,
+            image_link: true,
+          }
+        },
+        username: true
       }
     })
     //@ts-ignore
     const jwt_token = await gnerateToken(user.id, c.env.JWT_SECRET)
     return c.json({
-      token: jwt_token, success: true
+      token: jwt_token,
+      user,
+      success: true
     })
   } catch (e) {
     console.log(e)
     return c.json({
-      msg: "ERROR : can't able to signin", success: false
+      msg: "ERROR : can't able to signin",
+      success: false
     })
   }
 })
@@ -66,12 +146,14 @@ app.get('/getbulk', async (c) => {
     const prisma = await getPrismaClient(c);
     const posts = await prisma.post.findMany()
     return c.json({
-      posts, success: true
+      posts,
+      success: true
     })
   } catch (e) {
     console.log(e)
     return c.json({
-      msg: "ERROR : can't get posts", success: false
+      msg: "ERROR : can't get posts",
+      success: false
     })
   }
 })
@@ -79,19 +161,26 @@ app.get('/getbulk', async (c) => {
 app.post('/createpost', userAuth, async (c) => {
   try {
     try {
-      const { title, description } = await c.req.json();
+      const {
+        title,
+        description,
+        image_link
+      } = await c.req.json();
 
       if (!title && !description) {
         return c.json({
-          msg: "title & description required", success: false
+          msg: "title & description required",
+          success: false
         })
       } else if (!description) {
         return c.json({
-          msg: "description required", success: false
+          msg: "description required",
+          success: false
         })
       } else if (!title) {
         return c.json({
-          msg: "title required", success: false
+          msg: "title required",
+          success: false
         })
       }
 
@@ -104,43 +193,59 @@ app.post('/createpost', userAuth, async (c) => {
           title,
           description,
           //@ts-ignore
-          user_id: userId
-        }, select: {
+          user_id: userId,
+          image_link
+        },
+        select: {
           id: true,
           title: true,
           description: true,
           user_id: true,
-          User: true
+          image_link: true,
+          created_at: true,
+          is_edited: true,
+          last_edited: true,
+          User: {
+            select: {
+              _count: true,
+              created_at: true,
+              email: true,
+              id: true,
+              image_link: true,
+              username: true
+            }
+          }
         }
       })
-
-      console.log(post)
-
       return c.json({
-        msg: `post_${post.id} created successfully...`, success: true
+        msg: `post_${post.id} created successfully...`,
+        success: true
       })
     } catch (e) {
       return c.json({
-        msg: "FATAL : title and description not found", success: false
+        msg: "FATAL : title and description not found",
+        success: false
       })
     }
 
 
   } catch (e) {
     return c.json({
-      msg: `error creating post`, success: false
+      msg: `error creating post`,
+      success: false
     })
   }
 })
 
-app.delete('/deletepost', userAuth, async (c) => {
+app.delete('/deletepost/:postId', userAuth, async (c) => {
   try {
     try {
-      const postId = await c.req.param('postId')
-
+      const postId = c.req.param('postId')
+      console.log(postId)
       if (!postId) {
         return c.json({
-          msg: "title & description required", success: false
+          msg: "postId required",
+          success: false
         })
       }
 
@@ -148,32 +253,260 @@ app.delete('/deletepost', userAuth, async (c) => {
       const userId = c.get('userId');
       const prisma = await getPrismaClient(c);
 
+      const Post = await prisma.post.findFirst({
+        where: {
+          id: postId
+        }
+      })
+
+      if (!Post) {
+        return c.json({
+          msg: "FATAL : post not found",
+          success: false
+        })
+      }
+
       const post = await prisma.post.delete({
         where: {
           id: postId,
           //@ts-ignore
           user_id: userId
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          user_id: true,
+          image_link: true,
+          created_at: true,
+          is_edited: true,
+          last_edited: true,
+          User: {
+            select: {
+              _count: true,
+              created_at: true,
+              email: true,
+              id: true,
+              image_link: true,
+              username: true
+            }
+          }
         }
       })
 
       console.log(post)
 
       return c.json({
-        msg: `post_${post.id} deleted successfully...`, success: true
+        msg: `post_${post.id} deleted successfully...`,
+        success: true
       })
     } catch (e) {
       return c.json({
-        msg: "FATAL : title and description not found", success: false
+        msg: "Error : error deleting post",
+        success: false
       })
     }
 
 
   } catch (e) {
     return c.json({
-      msg: `error deleting post`, success: false
+      msg: `error deleting post`,
+      success: false
     })
   }
 })
+
+app.put('/updatepost/:postId', userAuth, async (c) => {
+  try {
+    try {
+      const {
+        title,
+        description,
+        image_link
+      } = await c.req.json();
+      const postId = c.req.param('postId')
+
+      const prisma = await getPrismaClient(c);
+      const Post = await prisma.post.findFirst({
+        where: {
+          id: postId
+        }
+      })
+
+      if (!Post) {
+        return c.json({
+          msg: "FATAL : post not found",
+          success: false
+        })
+      }
+
+      //@ts-ignore
+      const userId = c.get('userId');
+
+      const post = await prisma.post.update({
+        where: {
+          //@ts-ignore
+          user_id: userId,
+          id: postId
+        },
+        data: {
+          title,
+          description,
+          //@ts-ignore
+          user_id: userId,
+          image_link,
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          user_id: true,
+          User: {
+            select: {
+              id: true,
+              username: true,
+              email: true
+            }
+          }
+        }
+      })
+      return c.json({
+        msg: `post_${post.id} created successfully...`,
+        success: true
+      })
+    } catch (e) {
+      return c.json({
+        msg: "FATAL : title and description not found",
+        success: false
+      })
+    }
+
+
+  } catch (e) {
+    return c.json({
+      msg: `error creating post`,
+      success: false
+    })
+  }
+})
+
+app.put('/updateprofile', userAuth, async (c) => {
+  try {
+    try {
+      const {
+        username,
+        email,
+        image_link
+      } = await c.req.json();
+      //@ts-ignore
+      const userId = c.get('userId');
+      const prisma = await getPrismaClient(c);
+      const User = await prisma.user.findFirst({
+        where: {
+          //@ts-ignore
+          id: userId
+        }
+      })
+
+      if (!User) {
+        return c.json({
+          msg: "FATAL : post not found",
+          success: false
+        })
+      }
+
+      const user = await prisma.user.update({
+        where: {
+          //@ts-ignore
+          id: userId,
+          username
+        },
+        data: {
+          //@ts-ignore
+          id: userId,
+          username,
+          email,
+          image_link,
+        },
+        select: {
+          id: true,
+          posts: {
+            select: {
+              id: true,
+              created_at: true,
+              description: true,
+              image_link: true,
+              is_edited: true,
+              last_edited: true,
+              title: true,
+              User: {
+                select: {
+                  _count: true,
+                  created_at: true,
+                  email: true,
+                  id: true,
+                  image_link: true,
+                  username: true
+                }
+              }
+            }
+          }
+        }
+      })
+      return c.json({
+        msg: `post_${user.id} updated successfully...`,
+        success: true
+      })
+    } catch (e) {
+      return c.json({
+        msg: "Error : updating user profile",
+        success: false
+      })
+    }
+
+
+  } catch (e) {
+    return c.json({
+      msg: `error creating post`,
+      success: false
+    })
+  }
+})
+
+// app.post('/emailverification', userAuth, async (c) => {
+//   const { email } = await c.req.json();
+//   try {
+//     //@ts-ignore
+//     const userId = c.get('userId');
+//     const prisma = await getPrismaClient(c);
+//     //@ts-ignore
+//     const content = await returnLinktoVerify(userId,email)
+//     await sendEmail(email, "Regarding email verification",content)
+//     return c.json({
+//       msg: "Verification email sent please check you inbox/spam folder.", success: true
+//     })
+//   } catch (e) {
+//     return c.json({
+//       msg: "ERROR : Sending Verification email please try again!", success: false
+//     })
+//   }
+
+// })
+
+// app.put('/verifyemail', async (c) => {
+//   const { userId, email } = await c.req.query();
+//   const prisma = await getPrismaClient(c);
+//   const user = await prisma.user.update({
+//     where: {
+//       id: userId
+//     },
+//     data: {
+//       email
+//     }
+//   })
+
+//   return c.render(verified)
+// })
 
 app.get('/*', async (c) => {
   return c.render(status_404)
