@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { SearchBar } from "./SearchBar";
 
 export const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -8,11 +10,11 @@ export const Navbar = () => {
     username: "",
     image_link: null,
   });
+  const navigateTo = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      // Simulate fetching user data (replace with actual API call if needed)
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
       setUser({
         username: storedUser.username || "User",
@@ -24,13 +26,18 @@ export const Navbar = () => {
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between space-x-4">
         {/* Logo Section */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigateTo('/')}>
           <img src="/vite.svg" alt="Logo" className="h-8 w-8" />
           <span className="text-xl font-bold text-black font-extrabold">echo.ink</span>
         </div>
-
+        
+        {/* Search Bar Section */}
+        <div className="flex-1 max-w-xl mx-auto px-4">
+          <SearchBar />
+        </div>
+        
         {/* Right Section */}
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
@@ -46,9 +53,7 @@ export const Navbar = () => {
                   <X size={20} />
                 </div>
               )}
-              <span className="text-gray-800 font-semibold">
-                {user.username}
-              </span>
+              <span className="text-gray-800 font-semibold">{user.username}</span>
             </div>
           ) : (
             <button className="hidden md:flex items-center px-4 py-2 bg-black text-white text-sm rounded-md shadow hover:bg-white border-2 hover:border-black hover:text-black transition-all">
@@ -58,6 +63,7 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
+            aria-label="Toggle menu"
             className="md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
           >

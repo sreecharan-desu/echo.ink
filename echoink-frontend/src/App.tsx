@@ -7,16 +7,16 @@ import  SinglePostView  from "./pages/SinglePostView";
 
 function App() {
   return (
+    <BrowserRouter>
     <Layout>
-      <BrowserRouter>
         {/* ToastContainer should be outside Routes */}
         <ToastContainer />
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/post/:postId" element={<SinglePostView />} />
         </Routes>
-      </BrowserRouter>
     </Layout>
+    </BrowserRouter>
   );
 }
 

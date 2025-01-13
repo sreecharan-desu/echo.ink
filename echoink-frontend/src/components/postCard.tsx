@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Box, Chip, Avatar } from "@mui/material"
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
 import 'react-toastify/dist/ReactToastify.css';
-
+import { useState } from "react";
 interface PostData {
   id: string;
   created_at: string;
@@ -34,7 +34,7 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
   const navigate = useNavigate(); // Initialize useNavigate
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("en-IN", {
       year: "numeric",
       month: "long",
       day: "numeric",

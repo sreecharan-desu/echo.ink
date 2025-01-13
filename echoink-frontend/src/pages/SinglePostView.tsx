@@ -1,26 +1,40 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Card, CardContent, Typography, Box, Chip, Avatar } from "@mui/material";
-import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon } from "@mui/icons-material";
+import { Card, CardContent, Typography, Box, Chip, Avatar, IconButton, Grid, Skeleton } from "@mui/material";
+import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, ContentCopy as ContentCopyIcon, Facebook, Twitter, WhatsApp } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
+import { FacebookShareButton, WhatsappShareButton, TwitterShareButton, FacebookIcon, WhatsappIcon, TwitterIcon } from "react-share";
 import 'react-toastify/dist/ReactToastify.css';
 import { BASE_URL } from "./Home";
 import { Post } from "../store/store";
+import { toast } from "react-toastify";
+import { Copy, Share, Share2 } from "lucide-react";
 
+// Medium-sized button style
+const buttonStyles = {
+  borderRadius: "50%",
+  padding: "12px",
+  transition: "all 0.2s ease",
+  "&:hover": {
+    transform: "scale(1.1)",
+  },
+};
+
+const iconStyles = {
+  fontSize: 32,
+};
 
 const SinglePostView = () => {
   const { postId } = useParams();
-  const [post, setPost] = useState<Post>();
+  const [post, setPost] = useState<Post | null>(null);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
-    // Fetch the post data using postId
     const fetchPostData = async () => {
       try {
         const response = await fetch(`${BASE_URL}/post/${postId}`);
         const data = await response.json();
         setPost(data.post);
-        console.log(data.post)
       } catch (error) {
         console.error("Error fetching post data", error);
       }
@@ -32,176 +46,215 @@ const SinglePostView = () => {
   }, [postId]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("en-IN", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
   };
 
-  // Calculate read time (roughly 200 words per minute)
   const readTime = post ? Math.ceil(post.description.split(" ").length / 200) : 0;
-
-  // Calculate the time ago for when the post was created
   const timeAgo = post ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : "";
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+  
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied to clipboard!");
+  };
 
-  if (!post) return <div>Loading...</div>; // Display loading while post is being fetched
+  if (!post) return (
+    <Card elevation={3} sx={{ maxWidth: 700, margin: "auto", marginTop: 3, display: "flex", flexDirection: "column", borderRadius: 2, overflow: "hidden", bgcolor: "background.paper", boxShadow: 2 }}>
+      <CardContent sx={{ padding: 3 }}>
+        <Skeleton variant="text" sx={{ mb: 2, width: "80%" }} />
+        <Skeleton variant="text" sx={{ mb: 1, width: "60%" }} />
+        <Skeleton variant="text" sx={{ mb: 3, width: "40%" }} />
+        <Skeleton variant="rectangular" sx={{ height: 200, mb: 3 }} />
+        <Skeleton variant="text" sx={{ mb: 2 }} />
+        <Skeleton variant="text" sx={{ mb: 2, width: "30%" }} />
+      </CardContent>
+    </Card>
+  );
 
   return (
     <Card
       elevation={3}
       sx={{
+        maxWidth: 700, // Reduced width for better readability
+        margin: "auto",
+        marginTop: 3,
         display: "flex",
         flexDirection: "column",
         borderRadius: 2,
         overflow: "hidden",
         bgcolor: "background.paper",
-        transition: "all 0.3s ease",
-        "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: (theme) => theme.shadows[6],
-        },
-        cursor: "pointer",
+        boxShadow: 2,
       }}
     >
-      {!imageError && post.image_link ? (
-        <Box sx={{ position: "relative" }}>
-          <img
-            src={post.image_link}
-            alt={post.title}
-            onError={() => setImageError(true)}
-            style={{
-              width: "100%",
-              height: "400px",
-              objectFit: "cover",
-            }}
-          />
-          <Chip
-            icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-            label={`${readTime} min read`}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              bgcolor: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(4px)",
-            }}
-          />
-        </Box>
-      ) : (
-        <Box sx={{ position: "relative" }}>
-          <img
-            src={`/vite.svg`}
-            alt={post.title}
-            onError={() => setImageError(true)}
-            style={{
-              width: "100%",
-              height: "400px",
-              objectFit: "cover",
-            }}
-          />
-          <Chip
-            icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-            label={`${readTime} min read`}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              bgcolor: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(4px)",
-            }}
-          />
-        </Box>
-      )}
-
-      <CardContent sx={{ p: 3 }}>
+      {/* Content Section */}
+      <CardContent sx={{ padding: 3 }}>
+        {/* Title */}
         <Typography
-          variant="h5"
-          component="h2"
+          variant="h3"
           sx={{
             fontWeight: 600,
             mb: 2,
+            lineHeight: 1.4,
+            color: "text.primary",
             display: "-webkit-box",
-            WebkitLineClamp: 2,
+            WebkitLineClamp: 3,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            "&:hover": {
-              color: "black",
-            },
           }}
         >
           {post.title}
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
+        {/* Author and Date */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
           <Avatar
             src={post.User.image_link}
             alt={post.User.username}
-            sx={{ width: 40, height: 40 }}
-          >
-            {post.User.username.charAt(0).toUpperCase()}
-          </Avatar>
+            sx={{ width: 50, height: 50 }}
+          />
           <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {post.User.username}
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {post.User.username} <b className="font-extrabold">&middot;</b> <span className="bg-gray-200 px-2 py-0.5 text-xs font-bold rounded-xl">{post.User._count.posts} posts</span> <b className="font-extrabold">&middot;</b> <span className="bg-gray-200 px-2 py-0.5 text-xs font-bold rounded-xl">Member since {formatDate(post.User.created_at)}</span> 
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <CalendarIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-                <Typography variant="caption" color="text.secondary">
-                  {timeAgo}
-                </Typography>
-              </Box>
-              <Chip
-                label={`${post.User._count.posts} posts`}
-                size="small"
-                variant="outlined"
-                sx={{ height: 20 }}
-              />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <CalendarIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary">
+                {timeAgo}
+              </Typography>
             </Box>
           </Box>
         </Box>
 
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        {/* Tags */}
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 3 }}>
           {post.tags.map((tag) => (
             <Chip
               key={tag}
               label={`#${tag}`}
               size="small"
               sx={{
-                bgcolor: "grey.100",
+                bgcolor: "grey.200",
                 "&:hover": {
-                  bgcolor: "grey.200",
+                  bgcolor: "grey.300",
                 },
+                borderRadius: "20px",
               }}
             />
           ))}
         </Box>
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{
-            mb: 2,
-            display: "-webkit-box",
-            WebkitLineClamp: "unset", // Remove truncation for full description
-            WebkitBoxOrient: "vertical",
-            overflow: "unset", // Remove overflow hidden
-          }}
-        >
-          {post.description}
-        </Typography>
-
-        {post.is_edited && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <EditIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-            <Typography variant="caption" color="text.secondary">
-              Last edited {formatDate(post.last_edited)}
-            </Typography>
+        {/* Image Section */}
+        {!imageError && post.image_link ? (
+          <Box sx={{ position: "relative", mb: 3 }}>
+            <img
+              src={post.image_link}
+              alt={post.title}
+              onError={() => setImageError(true)}
+              style={{
+                width: "100%",
+                height: "auto",
+                objectFit: "cover",
+              }}
+            />
+            <Chip
+              icon={<AccessTimeIcon sx={{ fontSize: 14 }} />}
+              label={`${readTime} min read`}
+              size="small"
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                bgcolor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+              }}
+            />
+          </Box>
+        ) : (
+          <Box sx={{ position: "relative", mb: 3 }}>
+            <img
+              src={`/vite.svg`}
+              alt={post.title}
+              onError={() => setImageError(true)}
+              style={{
+                width: "100%",
+                height: "auto",
+                objectFit: "cover",
+              }}
+            />
+            <Chip
+              icon={<AccessTimeIcon sx={{ fontSize: 14 }} />}
+              label={`${readTime} min read`}
+              size="small"
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                bgcolor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+              }}
+            />
           </Box>
         )}
+
+        {/* Description */}
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{
+            mb: 4,
+            display: "-webkit-box",
+            WebkitLineClamp: 6,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            fontSize: "1rem",
+            lineHeight: 1.8,
+            whiteSpace: "pre-wrap", // To maintain formatting with new lines
+            textOverflow: "ellipsis", // Adds ellipsis if content overflows
+          }}
+        >
+          <span className="indent-5">{post.description}</span>
+        </Typography>
+
+        <span>{post.is_edited ?               <span className="bg-gray-100 px-2 py-0.5 font-thin rounded-xl italic text-sm">lastly edited on {formatDate(post.last_edited)} at {formatTime(post.last_edited)}</span>  : <></>}</span>
+        <div className="flex justify-between items-center gap-6 p-4 border-t border-t-gray-300 bg-white shadow-md">
+  {/* Share Buttons */}
+  <div className="flex gap-6">
+    {/* Facebook Share */}
+    <FacebookShareButton url={window.location.href} className="transition-transform duration-300 hover:scale-110">
+      <Facebook className="text-blue-600 text-2xl" />
+    </FacebookShareButton>
+
+    {/* WhatsApp Share */}
+    <WhatsappShareButton url={window.location.href} className="transition-transform duration-300 hover:scale-110">
+      <WhatsApp className="text-green-600 text-2xl" />
+    </WhatsappShareButton>
+
+    {/* Twitter Share */}
+    <TwitterShareButton url={window.location.href} className="transition-transform duration-300 hover:scale-110">
+      <Twitter className="text-blue-400" />
+    </TwitterShareButton>
+  </div>
+
+  {/* Copy Link Button */}
+  <button
+    onClick={handleCopyLink}
+    className="p-3 bg-blue-600 text-white rounded-full transition-all duration-300 hover:bg-blue-700 hover:scale-110"
+  >
+    <Share2  className="text-xl" />
+  </button>
+</div>
+
       </CardContent>
     </Card>
   );
