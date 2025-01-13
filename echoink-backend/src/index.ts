@@ -553,6 +553,45 @@ app.get('/post/:postId', async (c) => {
 
 })
 
+app.get('/posts',async(c)=>{
+  const query = await c.req.query('search')
+  const prisma = await getPrismaClient(c)
+
+  try{
+    const posts = await prisma.post.findMany({
+      where : {
+        title : {
+          contains : query,
+          mode : 'insensitive',
+        }
+      },select : {
+        created_at : true,
+        description : true,
+        id : true,
+        image_link : true,
+        is_edited : true,
+        last_edited : true,
+        tags : true,
+        title : true,
+        User : {
+          omit : {
+            password : true
+          }
+        },
+        user_id : true
+      }
+    })
+    
+    return c.json({
+      posts,success : true
+    })
+  }catch(e){
+    return c.json({
+      msg : "Error finding posts",success : false
+    })
+  }
+})
+
 app.get('/author/:userId', async (c) => {
   const userId = await c.req.param('userId');
   const prisma = await getPrismaClient(c);
