@@ -574,8 +574,13 @@ app.get('/posts',async(c)=>{
         tags : true,
         title : true,
         User : {
-          omit : {
-            password : true
+          select : {
+            _count : true,
+            created_at : true,
+            email : true,
+            id : true,
+            image_link : true,
+            username : true
           }
         },
         user_id : true

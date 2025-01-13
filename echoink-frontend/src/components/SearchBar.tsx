@@ -14,6 +14,7 @@ export const SearchBar = () => {
     try {
       const response = await fetch(`${BASE_URL}/posts?search=${searchQuery}`);
       const data = await response.json();
+      console.log(data)
       setPosts(data.posts); // Update Recoil state with the fetched posts
     } catch (error) {
       console.error("Error fetching posts:", error);
