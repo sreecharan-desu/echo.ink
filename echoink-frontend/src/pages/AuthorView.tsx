@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, Box, Chip, Typography, Skeleton } from "@mui/material";
 import PostCard from "../components/postCard"; // Your component to display individual posts

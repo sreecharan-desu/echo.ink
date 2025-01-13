@@ -1,28 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Card, CardContent, Typography, Box, Chip, Avatar, IconButton, Grid, Skeleton } from "@mui/material";
-import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, ContentCopy as ContentCopyIcon, Facebook, Twitter, WhatsApp } from "@mui/icons-material";
+import { Card, CardContent, Typography, Box, Chip, Avatar, Skeleton } from "@mui/material";
+import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Facebook, Twitter, WhatsApp } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
-import { FacebookShareButton, WhatsappShareButton, TwitterShareButton, FacebookIcon, WhatsappIcon, TwitterIcon } from "react-share";
+import { FacebookShareButton, WhatsappShareButton, TwitterShareButton } from "react-share";
 import 'react-toastify/dist/ReactToastify.css';
 import { BASE_URL } from "./Home";
 import { Post } from "../store/store";
 import { toast } from "react-toastify";
-import { Copy, Share, Share2 } from "lucide-react";
-
-// Medium-sized button style
-const buttonStyles = {
-  borderRadius: "50%",
-  padding: "12px",
-  transition: "all 0.2s ease",
-  "&:hover": {
-    transform: "scale(1.1)",
-  },
-};
-
-const iconStyles = {
-  fontSize: 32,
-};
+import { Share2 } from "lucide-react";
 
 const SinglePostView = () => {
   const { postId } = useParams();

@@ -48,6 +48,7 @@ export const SearchBar = () => {
     } else {
       setPosts([]); // Optionally clear posts if query is empty
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   return (
