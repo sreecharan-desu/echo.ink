@@ -28,3 +28,9 @@ export const postsState = atom<Post[]>({
   key: 'postsState', // unique ID for the atom
   default: [], // initial state is an empty array
 });
+
+
+export const InsighthspostsState = atom<Post[]>({
+  key: 'insightsState', // unique ID for the atom
+  default: [], // initial state is an empty array
+});

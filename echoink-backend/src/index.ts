@@ -606,6 +606,7 @@ app.get('/author/:userId', async (c) => {
     },
     select: {
       _count: true,
+      username : true,
       created_at: true,
       email: true,
       id: true,
@@ -619,7 +620,18 @@ app.get('/author/:userId', async (c) => {
           is_edited: true,
           last_edited: true,
           title: true,
-          user_id: true
+          user_id: true,
+          tags : true,
+          User : {
+            select : {
+              _count : true,
+              created_at : true,
+              email :true,
+              id : true,
+              image_link : true,
+              username : true
+            }
+          }
         }
       }
     }

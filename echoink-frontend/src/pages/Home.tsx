@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
-import { postsState, Post } from "../store/store";
+import { postsState, Post, InsighthspostsState } from "../store/store";
 import { toast } from "react-toastify";
 import PostCard from "../components/postCard";
 import {
@@ -21,42 +21,43 @@ import {
 } from "@mui/icons-material";
 
 // Featured Categories Component
-const FeaturedCategories = ({ posts, onCategoryClick , selectedCategory }: { 
-    posts: Post[],
-    onCategoryClick: (category: string) => void,
-    selectedCategory: string | null 
-  }) => {
-    const categories = Array.from(
-      new Set(posts.flatMap((post) => post.tags))
-    ).slice(0, 4);
-  
-    return (
-      <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <TagIcon sx={{ mr: 1, color: "black" }} />
-          <Typography variant="h6">Featured Categories</Typography>
-        </Box>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {categories.map((category) => (
-            <Chip
-              key={category}
-              label={category}
-              onClick={() => onCategoryClick(category)}
-              sx={{
-                bgcolor: selectedCategory === category ? "black" : "transparent",
+const FeaturedCategories = ({ posts, onCategoryClick, selectedCategory }: {
+  posts: Post[],
+  onCategoryClick: (category: string) => void,
+  selectedCategory: string | null
+}) => {
+  const categories = Array.from(
+    new Set(posts.flatMap((post) => post.tags))
+  ).slice(0, 4);
+
+  return (
+    <Paper elevation={1} sx={{ p: 3, mb: 4 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <TagIcon sx={{ mr: 1, color: "black" }} />
+        <Typography variant="h6">Featured Categories</Typography>
+      </Box>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+        {categories.map((category) => (
+          <Chip
+            key={category}
+            label={category}
+            onClick={() => onCategoryClick(category)}
+            sx={{
+              border : 1,
+              bgcolor: selectedCategory === category ? "black" : "transparent",
+              color: selectedCategory === category ? "white" : "black",
+              "&:hover": {
+                bgcolor: selectedCategory === category ? "black" : "lightgrey",
                 color: selectedCategory === category ? "white" : "black",
-                "&:hover": {
-                  bgcolor: selectedCategory === category ? "black" : "lightgrey",
-                  color: selectedCategory === category ? "white" : "black",
-                },
-              }}
-            />
-          ))}
-        </Box>
-      </Paper>
-    );
-  };
-  
+              },
+            }}
+          />
+        ))}
+      </Box>
+    </Paper>
+  );
+};
+
 export const BASE_URL = 'https://echoink-backend.cloudflare-apis.workers.dev'
 // Latest Insights Component
 const LatestInsights = ({ posts }: { posts: Post[] }) => {
@@ -99,13 +100,13 @@ const LatestInsights = ({ posts }: { posts: Post[] }) => {
         </Box>
         <Box sx={{ pl: 1 }}>
           {contributors.map((contributor, index) => (
-            <Box 
+            <Box
               key={index}
-              sx={{ 
-                display: "flex", 
-                alignItems: "center", 
+              sx={{
+                display: "flex",
+                alignItems: "center",
                 gap: 1,
-                my: 1 
+                my: 1
               }}
             >
               <Avatar sx={{ width: 24, height: 24, fontSize: 14 }}>
@@ -114,7 +115,7 @@ const LatestInsights = ({ posts }: { posts: Post[] }) => {
               <Typography variant="body2">
                 {contributor.username}
               </Typography>
-              <Chip 
+              <Chip
                 label={`${contributor.count} posts`}
                 size="small"
                 sx={{ ml: 'auto' }}
@@ -142,7 +143,7 @@ const LatestInsights = ({ posts }: { posts: Post[] }) => {
               </Typography>
             </Box>
             <Box sx={{ height: 6, width: "100%", backgroundColor: "#f1f1f1", borderRadius: 1 }}>
-              <Box 
+              <Box
                 sx={{
                   height: "100%",
                   width: `${(count / totalTags) * 100}%`,
@@ -163,7 +164,7 @@ export const Homepage = () => {
   const [posts, setPosts] = useRecoilState<Post[]>(postsState);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
+  const [insights, setInsightsPosts] = useRecoilState<Post[]>(InsighthspostsState)
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -174,6 +175,7 @@ export const Homepage = () => {
 
         if (data.success) {
           setPosts(data.posts);
+          setInsightsPosts(data.posts)
           toast.success("Posts loaded successfully");
         } else {
           toast.error(data.msg);
@@ -212,34 +214,42 @@ export const Homepage = () => {
     );
   }
   //@ts-expect-error ->not an error
-  const filteredPosts = selectedCategory ? posts.filter(post => post.tags.includes(selectedCategory)) : posts;
+  const filteredPosts = selectedCategory ? (posts ? posts : insights).filter(post => post.tags.includes(selectedCategory)) : posts;
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <FeaturedCategories 
+      <FeaturedCategories
         posts={posts}
         onCategoryClick={(category) => {
           setSelectedCategory(selectedCategory === category ? null : category);
         }}
-        selectedCategory = {selectedCategory}
+        selectedCategory={selectedCategory}
       />
 
       <Grid container spacing={4}>
         {/* Main Posts Section */}
         <Grid item xs={12} lg={8}>
           <Grid container spacing={3}>
-            {filteredPosts.map((post) => (
-              <Grid item xs={12} key={post.id}>
-                <PostCard post={post} />
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((post) => (
+                <Grid item xs={12} key={post.id}>
+                  <PostCard post={post} />
+                </Grid>
+              ))
+            ) : (
+              <Grid item xs={12}>
+                <div style={{ textAlign: 'center', padding: '20px', color: 'gray' }}>
+                  <h2>No posts found</h2>
+                  <p>Try adjusting your search or check back later for new posts.</p>
+                </div>
               </Grid>
-            ))}
+            )}
           </Grid>
         </Grid>
-
         {/* Sidebar */}
         <Grid item xs={12} lg={4}>
           <Box sx={{ position: "sticky", top: 20 }}>
-            <LatestInsights posts={posts} />
+            <LatestInsights posts={insights} />
           </Box>
         </Grid>
       </Grid>

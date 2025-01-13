@@ -2,8 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, Typography, Box, Chip, Avatar } from "@mui/material";
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
-import 'react-toastify/dist/ReactToastify.css';
 import { useState } from "react";
+
 interface PostData {
   id: string;
   created_at: string;
@@ -31,7 +31,7 @@ interface BlogPostCardProps {
 
 const BlogPostCard = ({ post }: BlogPostCardProps) => {
   const [imageError, setImageError] = useState(false);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-IN", {
@@ -41,14 +41,21 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
     });
   };
 
-  // Calculate read time (roughly 200 words per minute)
+  // Calculate read time
   const readTime = Math.ceil(post.description.split(" ").length / 200);
-  
-  // Calculate the time ago for when the post was created
+
+  // Calculate the time ago
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
 
-  const handleClick = () => {
-    navigate(`/post/${post.id}`); // Navigate to the post detail page
+  // Navigate to post details
+  const handlePostClick = () => {
+    navigate(`/post/${post.id}`);
+  };
+
+  // Navigate to user profile
+  const handleUsernameClick = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent navigation to post
+    navigate(`/author/${post.User.id}`);
   };
 
   return (
@@ -67,7 +74,7 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
         },
         cursor: "pointer",
       }}
-      onClick={handleClick} // Handle click for navigation
+      onClick={handlePostClick} // Navigate to post on card click
     >
       {!imageError && post.image_link ? (
         <Box sx={{ position: "relative" }}>
@@ -144,12 +151,17 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
           <Avatar
             src={post.User.image_link}
             alt={post.User.username}
-            sx={{ width: 40, height: 40 }}
+            sx={{ width: 40, height: 40, cursor: "pointer" }}
+            onClick={handleUsernameClick} // Navigate to user profile on avatar click
           >
             {post.User.username.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 600, cursor: "pointer" }}
+              onClick={handleUsernameClick} // Navigate to user profile on username click
+            >
               {post.User.username}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

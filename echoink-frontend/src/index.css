@@ -1,110 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Roboto', sans-serif;
-  font-size: 1rem;
-  line-height: 1.75; /* Improved line height for readability */
-  color: #333;
-  background-color: #f9f9f9; /* Soft background for a clean look */
-  margin: 0;
-  padding: 0;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700; /* Stronger emphasis on headers */
-  color: #111; /* Darker header color for contrast */
-}
-
-h1 {
-  font-size: 2.25rem; /* Large header size */
-  line-height: 1.4;
-}
-
-h2 {
-  font-size: 1.75rem;
-  line-height: 1.5;
-}
-
-h3 {
-  font-size: 1.5rem;
-  line-height: 1.6;
-}
-
-h4, h5, h6 {
-  font-size: 1.25rem;
-  line-height: 1.6;
-}
-
-p {
-  font-family: 'Roboto', sans-serif;
-  font-size: 1rem;
-  line-height: 1.75;
-  color: #444; /* Slightly lighter text for paragraphs */
-}
-
-a {
-  font-family: 'Inter', sans-serif;
-  text-decoration: none;
-  color: #007bff; /* Keep link color vibrant */
-  transition: color 0.3s ease;
-}
-
-a:hover {
-  color: #0056b3; /* Darken link color on hover */
-}
-
-ul, ol {
-  margin-left: 1.5rem; /* Add margin for list items */
-}
-
-blockquote {
-  font-family: 'Poppins', sans-serif;
-  font-style: italic;
-  border-left: 4px solid #ddd; /* Elegant left border for blockquotes */
-  padding-left: 1rem;
-  margin-left: 0;
-  color: #666;
-}
-
-code, pre {
-  font-family: 'Courier New', monospace;
-  background-color: #f0f0f0;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  color: #d6336c; /* Highlight code with a vibrant color */
-}
-
-button {
-  font-family: 'Poppins', sans-serif;
-  background-color: #007bff;
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: none;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #0056b3; /* Darker blue for button hover */
-}
-
-input, textarea {
-  font-family: 'Roboto', sans-serif;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-  box-sizing: border-box;
-  margin-bottom: 1rem;
-}
-
-input:focus, textarea:focus {
-  outline: none;
-  border-color: #007bff;
+* {
+  font-family: "Courier Prime", serif !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
 }

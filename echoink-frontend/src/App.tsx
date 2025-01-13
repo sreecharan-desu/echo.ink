@@ -4,6 +4,7 @@ import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css'; // Ensure you import the CSS
 import { Layout } from "./components/layout";
 import  SinglePostView  from "./pages/SinglePostView";
+import { AuthorView } from "./pages/AuthorView";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/post/:postId" element={<SinglePostView />} />
+          <Route path="/author/:authorId" element={<AuthorView />} />
         </Routes>
     </Layout>
     </BrowserRouter>

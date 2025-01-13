@@ -12,14 +12,32 @@ export const SearchBar = () => {
   // Fetch posts from backend
   const fetchPosts = async (searchQuery: string) => {
     try {
-      const response = await fetch(`${BASE_URL}/posts?search=${searchQuery}`);
+      console.log("search : ", searchQuery);
+      const trimmedQuery = searchQuery.trim(); // Remove leading and trailing spaces
+  
+      // Determine the URL based on the trimmed query
+      const url = trimmedQuery
+        ? `${BASE_URL}/posts?search=${encodeURIComponent(trimmedQuery)}`
+        : `${BASE_URL}/getbulk`; // Fetch bulk posts for empty or whitespace-only input
+  
+      console.log("Fetching from URL:", url);
+  
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       setPosts(data.posts); // Update Recoil state with the fetched posts
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
   };
+  
+  
+  
+  
 
   // Debounced version of fetchPosts to avoid too many requests
   const debouncedFetchPosts = debounce(fetchPosts, 500); // 500ms debounce
