@@ -184,6 +184,58 @@ app.get('/getbulk', async (c) => {
   }
 })
 
+app.get('/getprofile', userAuth, async (c) => {
+  try {
+    try {
+    
+      //@ts-ignore
+      const userId = c.get('userId');
+      const prisma = await getPrismaClient(c);
+
+      // await prisma.post.deleteMany()
+
+      const user = await prisma.user.findFirst({
+        select: {
+          _count : true,
+          created_at : true,
+          email : true,
+          id : true,
+          image_link : true,
+          posts : {
+           select : {
+             created_at : true,
+             description : true,
+             id : true,
+             image_link : true,
+             is_edited : true,
+             last_edited : true,
+             tags : true,
+             title : true,
+             user_id : true
+           }
+          },
+          username : true
+         }
+      })
+      return c.json({
+        user,
+        success: true
+      })
+    } catch (e) {
+      console.log(e)
+      return c.json({
+        msg: "FATAL : error gathering user details!",
+        success: false
+      })
+    }
+  } catch (e) {
+    return c.json({
+      msg: `error getting details`,
+      success: false
+    })
+  }
+})
+
 app.post('/createpost', userAuth, async (c) => {
   try {
     try {

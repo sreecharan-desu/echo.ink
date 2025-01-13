@@ -29,6 +29,12 @@ export const postsState = atom<Post[]>({
   default: [], // initial state is an empty array
 });
 
+// Define Recoil atom for user data
+export const userAtom = atom({
+  key: "userAtom",
+  default: null,
+});
+
 
 export const InsighthspostsState = atom<Post[]>({
   key: 'insightsState', // unique ID for the atom

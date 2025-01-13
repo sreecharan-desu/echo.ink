@@ -6,6 +6,8 @@ const Layout = React.lazy(()=>import('./components/layout'))
 const SinglePostView = React.lazy(()=>import('./pages/SinglePostView'))
 const AuthorView = React.lazy(()=>import('./pages/AuthorView'))
 const Homepage = React.lazy(()=>import('./pages/Home'))
+const Signin = React.lazy(()=>import('./pages/signin'))
+const Signup = React.lazy(()=>import('./pages/signup'))
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/" element={<React.Suspense fallback={<LoadingAnimation/>}><Homepage /></React.Suspense>} />
           <Route path="/post/:postId" element={<React.Suspense fallback={<LoadingAnimation/>}><SinglePostView /></React.Suspense>} />
           <Route path="/author/:authorId" element={<React.Suspense fallback={<LoadingAnimation/>}><AuthorView /></React.Suspense>} />
+          <Route path="/signin" element={<React.Suspense fallback={<LoadingAnimation/>}><Signin /></React.Suspense>} />
+          <Route path="/signup" element={<React.Suspense fallback={<LoadingAnimation/>}><Signup /></React.Suspense>} />
         </Routes>
     </Layout>
     </BrowserRouter>
