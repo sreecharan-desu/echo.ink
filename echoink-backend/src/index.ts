@@ -193,7 +193,7 @@ app.post('/createpost', userAuth, async (c) => {
         image_link,
         tags
       } = await c.req.json();
-
+      
       if (!title && !description) {
         return c.json({
           msg: "title & description required",
@@ -219,6 +219,8 @@ app.post('/createpost', userAuth, async (c) => {
       //@ts-ignore
       const userId = c.get('userId');
       const prisma = await getPrismaClient(c);
+
+      // await prisma.post.deleteMany()
 
       const post = await prisma.post.create({
         data: {
@@ -515,6 +517,27 @@ app.get('/post/:postId', async (c) => {
   const post = await prisma.post.findFirst({
     where: {
       id: postId
+    },select : {
+      created_at : true,
+      description : true,
+      id : true,
+      image_link : true,
+      is_edited : true,
+      last_edited : true,
+      tags : true,
+      title : true,
+      User : {
+        select : {
+          _count : true,
+          created_at : true,
+          email : true,
+          id : true,
+          image_link : true,
+          posts : true,
+          username : true
+        }
+      },
+      user_id : true
     }
   })
 
