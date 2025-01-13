@@ -1,7 +1,8 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Avatar, Box, Chip, Typography, Skeleton } from "@mui/material";
-import PostCard from "../components/postCard"; // Your component to display individual posts
+const PostCard = React.lazy(() => import("../components/postCard"));
 import { BASE_URL } from "./Home";
 import { Post } from "../store/store";
 
@@ -26,7 +27,7 @@ const getAuthorDetails = async (userId: string) => {
     return data;
 };
 
-export const AuthorView = () => {
+export default function AuthorView (){
     const { authorId } = useParams<{ authorId: string }>();
     const [author, setAuthor] = useState<Author | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);

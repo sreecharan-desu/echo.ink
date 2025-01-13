@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRecoilState } from "recoil";
 import { postsState, Post, InsighthspostsState } from "../store/store";
-import { toast } from "react-toastify";
-import PostCard from "../components/postCard";
+import { toast } from "react-toastify";import * as React from "react";
+const PostCard = React.lazy(() => import("../components/postCard"));
 import {
   Container,
   Grid,
@@ -160,7 +160,7 @@ const LatestInsights = ({ posts }: { posts: Post[] }) => {
 };
 
 // Main Homepage Component
-export const Homepage = () => {
+export default function Homepage(){
   const [posts, setPosts] = useRecoilState<Post[]>(postsState);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

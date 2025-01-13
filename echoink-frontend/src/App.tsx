@@ -1,10 +1,11 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Homepage } from "./pages/Home";
+import { BrowserRouter, Route, Routes } from "react-router-dom";import * as React from "react";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css'; // Ensure you import the CSS
-import { Layout } from "./components/layout";
-import  SinglePostView  from "./pages/SinglePostView";
-import { AuthorView } from "./pages/AuthorView";
+const LoadingAnimation = React.lazy(()=>import('./components/loadingcomponent'))
+const Layout = React.lazy(()=>import('./components/layout'))
+const SinglePostView = React.lazy(()=>import('./pages/SinglePostView'))
+const AuthorView = React.lazy(()=>import('./pages/AuthorView'))
+const Homepage = React.lazy(()=>import('./pages/Home'))
 
 function App() {
   return (
@@ -13,13 +14,15 @@ function App() {
         {/* ToastContainer should be outside Routes */}
         <ToastContainer />
         <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/post/:postId" element={<SinglePostView />} />
-          <Route path="/author/:authorId" element={<AuthorView />} />
+          <Route path="/" element={<React.Suspense fallback={<LoadingAnimation/>}><Homepage /></React.Suspense>} />
+          <Route path="/post/:postId" element={<React.Suspense fallback={<LoadingAnimation/>}><SinglePostView /></React.Suspense>} />
+          <Route path="/author/:authorId" element={<React.Suspense fallback={<LoadingAnimation/>}><AuthorView /></React.Suspense>} />
         </Routes>
     </Layout>
     </BrowserRouter>
   );
 }
+
+
 
 export default App;

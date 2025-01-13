@@ -4,7 +4,7 @@ import { postsState, Post } from "../store/store"; // import your atom
 import { debounce } from "lodash"; // make sure you install lodash for debouncing
 import { BASE_URL } from "../pages/Home";
 
-export const SearchBar = () => {
+export default function SearchBar(){
   const [query, setQuery] = useState(""); // Search query state
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_posts, setPosts] = useRecoilState<Post[]>(postsState); // Recoil state for posts

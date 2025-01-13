@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { SearchBar } from "./SearchBar";
-
-export const Navbar = () => {
+import * as React from "react";
+const SearchBar = React.lazy(()=>import('../components/SearchBar'))
+export default function Navbar(){
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ username: string; image_link: string | null }>({

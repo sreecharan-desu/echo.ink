@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
-import { Navbar } from "./navbar";
+import * as React from "react";
+const Navbar = React.lazy(()=>import("./navbar"))
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-export const Layout = ({ children }: LayoutProps) => {
+export default function Layout ({ children }: LayoutProps){
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
