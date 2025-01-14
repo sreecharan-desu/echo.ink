@@ -15,7 +15,7 @@ const CLOUDINARY_UPLOAD_PRESET = 'echoink_uploads';
 const CLOUDINARY_CLOUD_NAME = 'ddrj7yzyl';
 const CLOUDINARY_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-const BASE_URL = 'http://localhost:8787';
+const BASE_URL = 'https://echoink-backend.cloudflare-apis.workers.dev';
 
 interface PostForm {
     title: string;
