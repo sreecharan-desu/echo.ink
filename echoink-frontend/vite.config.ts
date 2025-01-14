@@ -26,5 +26,9 @@ export default defineConfig({
     watch: {
       usePolling: true
     }
-  }
+  },
+  build: {
+    sourcemap: false,
+  },
+  
 });

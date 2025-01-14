@@ -1,10 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, Typography, Box, Chip, Avatar, Button } from "@mui/material";
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-//@ts-expect-error ->not an error
 import { formatDistanceToNow } from "date-fns";
 import { useState } from "react";
-import * as DOMPurify from "dompurify";
+import DOMPurify from 'dompurify';
 
 interface PostData {
   id: string;
@@ -34,35 +33,56 @@ interface BlogPostCardProps {
   showActions?: boolean;
 }
 
-const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps) => {
+const BlogPostCard = ({ post, onDelete, onEdit, showActions = false }: BlogPostCardProps) => {
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    try {
+      return new Date(dateString).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return dateString;
+    }
   };
 
-  // Calculate read time
-  const readTime = Math.ceil(post.description.split(" ").length / 200);
+  // Calculate read time (assuming 200 words per minute reading speed)
+  const readTime = Math.max(1, Math.ceil(post.description.split(/\s+/).length / 200));
 
-
-  // Navigate to post details
   const handlePostClick = () => {
     navigate(`/post/${post.id}`);
   };
 
-  // Navigate to user profile
   const handleUsernameClick = (event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent navigation to post
+    event.stopPropagation();
     navigate(`/author/${post.User.id}`);
   };
 
-  console.log('Raw description:', post.description);
-  console.log('Sanitized description:', DOMPurify.sanitize(post.description));
+  const sanitizedDescription = () => {
+    try {
+      const decodedDescription = decodeURIComponent(post.description.replace(/\+/g, ' '));
+      return DOMPurify.sanitize(decodedDescription, {
+        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'br'],
+        ALLOWED_ATTR: ['href', 'target']
+      });
+    } catch (error) {
+      console.error("Description sanitization error:", error);
+      return post.description;
+    }
+  };
+
+  const handleActionClick = (
+    event: React.MouseEvent,
+    action: (param: any) => void,
+    param: any
+  ) => {
+    event.stopPropagation();
+    action(param);
+  };
 
   return (
     <Card
@@ -79,60 +99,34 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
           boxShadow: (theme) => theme.shadows[6],
         },
         cursor: "pointer",
+        position: "relative",
       }}
-      onClick={handlePostClick} // Navigate to post on card click
+      onClick={handlePostClick}
     >
-      {!imageError && post.image_link ? (
-        <Box sx={{ position: "relative" }}>
-          <img
-            src={post.image_link}
-            alt={post.title}
-            onError={() => setImageError(true)}
-            style={{
-              width: "100%",
-              height: "200px",
-              objectFit: "cover",
-            }}
-          />
-          <Chip
-            icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-            label={`${readTime} min read`}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              bgcolor: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(4px)",
-            }}
-          />
-        </Box>
-      ) : (
-        <Box sx={{ position: "relative" }}>
-          <img
-            src={`/vite.svg`}
-            alt={post.title}
-            onError={() => setImageError(true)}
-            style={{
-              width: "100%",
-              height: "200px",
-              objectFit: "cover",
-            }}
-          />
-          <Chip
-            icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
-            label={`${readTime} min read`}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              bgcolor: "rgba(255, 255, 255, 0.9)",
-              backdropFilter: "blur(4px)",
-            }}
-          />
-        </Box>
-      )}
+      <Box sx={{ position: "relative", height: 200 }}>
+        <img
+          src={!imageError && post.image_link ? post.image_link : "/vite.svg"}
+          alt={post.title}
+          onError={() => setImageError(true)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+        <Chip
+          icon={<AccessTimeIcon sx={{ fontSize: 16 }} />}
+          label={`${readTime} min read`}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            bgcolor: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(4px)",
+          }}
+        />
+      </Box>
 
       <CardContent sx={{ p: 3 }}>
         <Typography
@@ -146,7 +140,7 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
             "&:hover": {
-              color: "black",
+              color: "primary.main",
             },
           }}
         >
@@ -155,18 +149,24 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
 
         <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 1 }}>
           <Avatar
-            src={post.User.image_link}
+            src={post.User.image_link || undefined}
             alt={post.User.username}
             sx={{ width: 40, height: 40, cursor: "pointer" }}
-            onClick={handleUsernameClick} // Navigate to user profile on avatar click
+            onClick={handleUsernameClick}
           >
             {post.User.username.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
             <Typography
               variant="subtitle2"
-              sx={{ fontWeight: 600, cursor: "pointer" }}
-              onClick={handleUsernameClick} // Navigate to user profile on username click
+              sx={{ 
+                fontWeight: 600, 
+                cursor: "pointer",
+                "&:hover": {
+                  color: "primary.main",
+                }
+              }}
+              onClick={handleUsernameClick}
             >
               {post.User.username}
             </Typography>
@@ -174,7 +174,7 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <CalendarIcon sx={{ fontSize: 14, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })} 
+                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
                 </Typography>
               </Box>
               <Chip
@@ -213,18 +213,10 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
           }}
-          dangerouslySetInnerHTML={{ 
-            __html: DOMPurify.sanitize(
-              decodeURIComponent(post.description.replace(/\+/g, ' ')), 
-              { 
-                ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'br'],
-                ALLOWED_ATTR: ['href', 'target'] 
-              }
-            ) 
-          }}
+          dangerouslySetInnerHTML={{ __html: sanitizedDescription() }}
         />
 
-        {post.is_edited && (
+        {post.is_edited && post.last_edited && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <EditIcon sx={{ fontSize: 14, color: "text.secondary" }} />
             <Typography variant="caption" color="text.secondary">
@@ -234,41 +226,42 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
         )}
 
         {showActions && (
-          <Box sx={{ 
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            display: 'flex',
-            gap: 1,
-            opacity: 0,
-            transition: 'opacity 0.2s',
-            '.MuiCard-root:hover &': {
-              opacity: 1
-            }
-          }}>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit?.(post);
-              }}
-              sx={{ minWidth: 'auto', p: 1 }}
-            >
-              <EditIcon sx={{ fontSize: 20 }} />
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete?.(post.id);
-              }}
-              sx={{ minWidth: 'auto', p: 1 }}
-            >
-              <DeleteIcon sx={{ fontSize: 20 }} />
-            </Button>
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              display: "flex",
+              gap: 1,
+              opacity: 0,
+              transition: "opacity 0.2s",
+              ".MuiCard-root:hover &": {
+                opacity: 1,
+              },
+              zIndex: 1,
+            }}
+          >
+            {onEdit && (
+              <Button
+                variant="contained"
+                size="small"
+                onClick={(e) => handleActionClick(e, onEdit, post)}
+                sx={{ minWidth: "auto", p: 1 }}
+              >
+                <EditIcon sx={{ fontSize: 20 }} />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                onClick={(e) => handleActionClick(e, onDelete, post.id)}
+                sx={{ minWidth: "auto", p: 1 }}
+              >
+                <DeleteIcon sx={{ fontSize: 20 }} />
+              </Button>
+            )}
           </Box>
         )}
       </CardContent>
