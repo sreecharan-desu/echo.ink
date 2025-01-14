@@ -9,7 +9,7 @@ datasource db {
 
 
 model User{
-  id String @unique @default(uuid())  
+  id  String @id @unique @default(uuid())  
   username String @unique
   password String
   image_link String @default("")
@@ -19,7 +19,7 @@ model User{
 }
 
 model Post{
-  id String @unique @default(uuid())
+  id String @id @unique @default(uuid())
   title String @default("No title")
   description String @default("No description")
   created_at DateTime @default(now())

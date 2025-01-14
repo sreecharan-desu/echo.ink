@@ -57,8 +57,7 @@ const FeaturedCategories = ({ posts, onCategoryClick, selectedCategory }: {
     </Paper>
   );
 };
-
-export const BASE_URL = 'https://echoink-backend.cloudflare-apis.workers.dev'
+export const BASE_URL = 'https://echoink-backend.cloudflare-apis.workers.dev';
 // Latest Insights Component
 const LatestInsights = ({ posts }: { posts: Post[] }) => {
   // Get top contributors based on post count
@@ -214,7 +213,6 @@ export default function Homepage(){
       </Box>
     );
   }
-  //@ts-expect-error ->not an error
   const filteredPosts = selectedCategory ? (posts ? posts : insights).filter(post => post.tags.includes(selectedCategory)) : posts;
 
   return (
@@ -234,7 +232,7 @@ export default function Homepage(){
             {filteredPosts.length > 0 ? (
               filteredPosts.map((post) => (
                 <Grid item xs={12} key={post.id}>
-                  <PostCard post={post} />
+                  <PostCard post={{...post, is_edited: false, last_edited: null}} />
                 </Grid>
               ))
             ) : (

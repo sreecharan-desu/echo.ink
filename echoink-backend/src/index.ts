@@ -15,9 +15,11 @@ import {
   usernameAvailability,
   userCredsValidation,
   authCreds,
-  userAuth
+  userAuth,
+  checkUserOwnership
 } from './userMiddleware';
 import { cors } from 'hono/cors';
+
 const app = new Hono<{
   Bindings: {
     DATABASE_URL: string,
@@ -25,8 +27,7 @@ const app = new Hono<{
   }
 }>()
 
-
-app.use(cors())
+app.use(cors());
 
 app.get('/', async (c) => {
   return c.render(homepage);
@@ -148,26 +149,26 @@ app.get('/getbulk', async (c) => {
   try {
     const prisma = await getPrismaClient(c);
     const posts = await prisma.post.findMany({
-      select : {
-        id : true,
-        created_at : true,
-        description : true,
-        image_link : true,
-        is_edited : true,
-        last_edited : true,
-        title : true,
-        tags : true,
-        User : {
-          select : {
-            _count : true,
-            created_at : true,
-            email : true,
-            id : true,
-            image_link : true,
-            username : true
+      select: {
+        id: true,
+        created_at: true,
+        description: true,
+        image_link: true,
+        is_edited: true,
+        last_edited: true,
+        title: true,
+        tags: true,
+        User: {
+          select: {
+            _count: true,
+            created_at: true,
+            email: true,
+            id: true,
+            image_link: true,
+            username: true
           }
         },
-        user_id : true
+        user_id: true
       }
     })
     return c.json({
@@ -187,35 +188,45 @@ app.get('/getbulk', async (c) => {
 app.get('/getprofile', userAuth, async (c) => {
   try {
     try {
-    
+
       //@ts-ignore
       const userId = c.get('userId');
       const prisma = await getPrismaClient(c);
 
-      // await prisma.post.deleteMany()
-
       const user = await prisma.user.findFirst({
+        where: {
+          //@ts-ignore
+          id: userId
+        },
         select: {
-          _count : true,
-          created_at : true,
-          email : true,
-          id : true,
-          image_link : true,
-          posts : {
-           select : {
-             created_at : true,
-             description : true,
-             id : true,
-             image_link : true,
-             is_edited : true,
-             last_edited : true,
-             tags : true,
-             title : true,
-             user_id : true
-           }
+          _count: true,
+          created_at: true,
+          email: true,
+          id: true,
+          image_link: true,
+          posts: {
+            select: {
+              created_at: true,
+              description: true,
+              id: true,
+              image_link: true,
+              is_edited: true,
+              last_edited: true,
+              tags: true,
+              title: true,
+              user_id: true,
+              User: {
+                select: {
+                  id: true,
+                  username: true,
+                  image_link: true,
+                  _count: true
+                }
+              }
+            }
           },
-          username : true
-         }
+          username: true
+        }
       })
       return c.json({
         user,
@@ -238,91 +249,103 @@ app.get('/getprofile', userAuth, async (c) => {
 
 app.post('/createpost', userAuth, async (c) => {
   try {
-    try {
-      const {
+    const {
+      title,
+      description,
+      image_link,
+      tags
+    } = await c.req.json();
+
+    if (!title && !description) {
+      return c.json({
+        msg: "title & description required",
+        success: false
+      });
+    } else if (!description) {
+      return c.json({
+        msg: "description required",
+        success: false
+      });
+    } else if (!title) {
+      return c.json({
+        msg: "title required",
+        success: false
+      });
+    } else if (!tags) {
+      return c.json({
+        msg: "tags required",
+        success: false
+      });
+    }
+
+    //@ts-ignore
+    const userId = c.get('userId');
+    const prisma = await getPrismaClient(c);
+
+    // First find the user to get their username
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId
+      }
+    });
+
+    if (!user) {
+      return c.json({
+        msg: "User not found",
+        success: false
+      });
+    }
+
+    const post = await prisma.post.create({
+      data: {
         title,
         description,
         image_link,
-        tags
-      } = await c.req.json();
-      
-      if (!title && !description) {
-        return c.json({
-          msg: "title & description required",
-          success: false
-        })
-      } else if (!description) {
-        return c.json({
-          msg: "description required",
-          success: false
-        })
-      } else if (!title) {
-        return c.json({
-          msg: "title required",
-          success: false
-        })
-      }else if(!tags){
-        return c.json({
-          msg: "tags required",
-          success: false
-        })
-      }
-
-      //@ts-ignore
-      const userId = c.get('userId');
-      const prisma = await getPrismaClient(c);
-
-      // await prisma.post.deleteMany()
-
-      const post = await prisma.post.create({
-        data: {
-          title,
-          description,
-          //@ts-ignore
-          user_id: userId,
-          image_link,
-          tags
-        },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          user_id: true,
-          image_link: true,
-          created_at: true,
-          is_edited: true,
-          last_edited: true,
-          tags : true,
-          User: {
-            select: {
-              _count: true,
-              created_at: true,
-              email: true,
-              id: true,
-              image_link: true,
-              username: true
-            }
+        tags,
+        is_edited: false,
+        last_edited: new Date().toISOString(),
+        User: {
+          connect: {
+            username: user.username // Connect using username since it's unique
           }
         }
-      })
-      return c.json({
-        msg: `post_${post.id} created successfully...`,
-        success: true
-      })
-    } catch (e) {
-      console.log(e)
-      return c.json({
-        msg: "FATAL : error creating post please try again!",
-        success: false
-      })
-    }
-  } catch (e) {
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        user_id: true,
+        image_link: true,
+        created_at: true,
+        is_edited: true,
+        last_edited: true,
+        tags: true,
+        User: {
+          select: {
+            _count: true,
+            created_at: true,
+            email: true,
+            id: true,
+            image_link: true,
+            username: true
+          }
+        }
+      }
+    });
+
     return c.json({
-      msg: `error creating post`,
+      post,
+      msg: `post_${post.id} created successfully...`,
+      success: true
+    });
+  } catch (error) {
+    console.error('Create post error:', error);
+    return c.json({
+      msg: "Failed to create post",
       success: false
-    })
+    });
   }
-})
+});
 
 app.delete('/deletepost/:postId', userAuth, async (c) => {
   try {
@@ -479,11 +502,12 @@ app.put('/updatepost/:postId', userAuth, async (c) => {
   }
 })
 
-app.put('/updateprofile', userAuth, async (c) => {
+app.put('/updateprofile', userAuth, checkUserOwnership, async (c) => {
   try {
     try {
       const {
         username,
+        new_username,
         email,
         image_link
       } = await c.req.json();
@@ -511,9 +535,7 @@ app.put('/updateprofile', userAuth, async (c) => {
           username
         },
         data: {
-          //@ts-ignore
-          id: userId,
-          username,
+          username: new_username,
           email,
           image_link,
         },
@@ -569,27 +591,27 @@ app.get('/post/:postId', async (c) => {
   const post = await prisma.post.findFirst({
     where: {
       id: postId
-    },select : {
-      created_at : true,
-      description : true,
-      id : true,
-      image_link : true,
-      is_edited : true,
-      last_edited : true,
-      tags : true,
-      title : true,
-      User : {
-        select : {
-          _count : true,
-          created_at : true,
-          email : true,
-          id : true,
-          image_link : true,
-          posts : true,
-          username : true
+    }, select: {
+      created_at: true,
+      description: true,
+      id: true,
+      image_link: true,
+      is_edited: true,
+      last_edited: true,
+      tags: true,
+      title: true,
+      User: {
+        select: {
+          _count: true,
+          created_at: true,
+          email: true,
+          id: true,
+          image_link: true,
+          posts: true,
+          username: true
         }
       },
-      user_id : true
+      user_id: true
     }
   })
 
@@ -605,46 +627,46 @@ app.get('/post/:postId', async (c) => {
 
 })
 
-app.get('/posts',async(c)=>{
+app.get('/posts', async (c) => {
   const query = await c.req.query('search')
   const prisma = await getPrismaClient(c)
 
-  try{
+  try {
     const posts = await prisma.post.findMany({
-      where : {
-        title : {
-          contains : query,
-          mode : 'insensitive',
+      where: {
+        title: {
+          contains: query,
+          mode: 'insensitive',
         }
-      },select : {
-        created_at : true,
-        description : true,
-        id : true,
-        image_link : true,
-        is_edited : true,
-        last_edited : true,
-        tags : true,
-        title : true,
-        User : {
-          select : {
-            _count : true,
-            created_at : true,
-            email : true,
-            id : true,
-            image_link : true,
-            username : true
+      }, select: {
+        created_at: true,
+        description: true,
+        id: true,
+        image_link: true,
+        is_edited: true,
+        last_edited: true,
+        tags: true,
+        title: true,
+        User: {
+          select: {
+            _count: true,
+            created_at: true,
+            email: true,
+            id: true,
+            image_link: true,
+            username: true
           }
         },
-        user_id : true
+        user_id: true
       }
     })
-    
+
     return c.json({
-      posts,success : true
+      posts, success: true
     })
-  }catch(e){
+  } catch (e) {
     return c.json({
-      msg : "Error finding posts",success : false
+      msg: "Error finding posts", success: false
     })
   }
 })
@@ -658,7 +680,7 @@ app.get('/author/:userId', async (c) => {
     },
     select: {
       _count: true,
-      username : true,
+      username: true,
       created_at: true,
       email: true,
       id: true,
@@ -673,15 +695,15 @@ app.get('/author/:userId', async (c) => {
           last_edited: true,
           title: true,
           user_id: true,
-          tags : true,
-          User : {
-            select : {
-              _count : true,
-              created_at : true,
-              email :true,
-              id : true,
-              image_link : true,
-              username : true
+          tags: true,
+          User: {
+            select: {
+              _count: true,
+              created_at: true,
+              email: true,
+              id: true,
+              image_link: true,
+              username: true
             }
           }
         }

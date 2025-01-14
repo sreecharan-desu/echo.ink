@@ -133,7 +133,11 @@ export default function AuthorView (){
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
                 {posts.length > 0 ? (
                     posts.map((post: Post) => (
-                        <PostCard key={post.id} post={post} />
+                        <PostCard key={post.id} post={{
+                            ...post,
+                            is_edited: false,
+                            last_edited: null
+                        }} />
                     ))
                 ) : (
                     <Typography>No posts available</Typography>

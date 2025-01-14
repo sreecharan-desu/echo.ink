@@ -8,7 +8,8 @@ const AuthorView = React.lazy(()=>import('./pages/AuthorView'))
 const Homepage = React.lazy(()=>import('./pages/Home'))
 const Signin = React.lazy(()=>import('./pages/signin'))
 const Signup = React.lazy(()=>import('./pages/signup'))
-
+const Profile = React.lazy(()=>import('./pages/Profile'))
+const Write = React.lazy(()=>import('./pages/Write'))
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +22,8 @@ function App() {
           <Route path="/author/:authorId" element={<React.Suspense fallback={<LoadingAnimation/>}><AuthorView /></React.Suspense>} />
           <Route path="/signin" element={<React.Suspense fallback={<LoadingAnimation/>}><Signin /></React.Suspense>} />
           <Route path="/signup" element={<React.Suspense fallback={<LoadingAnimation/>}><Signup /></React.Suspense>} />
+          <Route path="/profile" element={<React.Suspense fallback={<LoadingAnimation/>}><Profile /></React.Suspense>} />
+          <Route path="/write" element={<React.Suspense fallback={<LoadingAnimation/>}><Write /></React.Suspense>} />
         </Routes>
     </Layout>
     </BrowserRouter>

@@ -9,6 +9,7 @@ import { BASE_URL } from "./Home";
 import { Post } from "../store/store";
 import { toast } from "react-toastify";
 import { Share2 } from "lucide-react";
+import DOMPurify from "dompurify";
 
 const SinglePostView = () => {
   const { postId } = useParams();
@@ -205,12 +206,19 @@ const SinglePostView = () => {
             overflow: "hidden",
             fontSize: "1rem",
             lineHeight: 1.8,
-            whiteSpace: "pre-wrap", // To maintain formatting with new lines
-            textOverflow: "ellipsis", // Adds ellipsis if content overflows
+            whiteSpace: "pre-wrap",
+            textOverflow: "ellipsis",
           }}
-        >
-          <span className="indent-5">{post.description}</span>
-        </Typography>
+          dangerouslySetInnerHTML={{ 
+            __html: DOMPurify.sanitize(
+              decodeURIComponent(post.description.replace(/\+/g, ' ')), 
+              { 
+                ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'br'],
+                ALLOWED_ATTR: ['href', 'target'] 
+              }
+            ) 
+          }}
+        />
 
         <span>{post.is_edited ?               <span className="bg-gray-100 px-2 py-0.5 font-thin rounded-xl italic text-sm">lastly edited on {formatDate(post.last_edited)} at {formatTime(post.last_edited)}</span>  : <></>}</span>
         <div className="flex justify-between items-center gap-6 p-4 border-t border-t-gray-300 bg-white shadow-md">

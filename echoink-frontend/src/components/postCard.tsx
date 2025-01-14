@@ -1,16 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, Typography, Box, Chip, Avatar } from "@mui/material";
-import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon } from "@mui/icons-material";
-import { formatDistanceToNow } from "date-fns";
+import { Card, CardContent, Typography, Box, Chip, Avatar, Button } from "@mui/material";
+import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useState } from "react";
-
+import DOMPurify from 'dompurify';
+import { formatDistanceToNow } from "date-fns";
 interface PostData {
   id: string;
   created_at: string;
   description: string;
-  image_link: string;
+  image_link: string | null;
   is_edited: boolean;
-  last_edited: string;
+  last_edited: string | null;
   title: string;
   tags: string[];
   User: {
@@ -20,16 +20,19 @@ interface PostData {
     created_at: string;
     email: string;
     id: string;
-    image_link: string;
+    image_link: string | null;
     username: string;
   };
 }
 
 interface BlogPostCardProps {
   post: PostData;
+  onDelete?: (postId: string) => void;
+  onEdit?: (post: PostData) => void;
+  showActions?: boolean;
 }
 
-const BlogPostCard = ({ post }: BlogPostCardProps) => {
+const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps) => {
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
 
@@ -57,6 +60,9 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
     event.stopPropagation(); // Prevent navigation to post
     navigate(`/author/${post.User.id}`);
   };
+
+  console.log('Raw description:', post.description);
+  console.log('Sanitized description:', DOMPurify.sanitize(post.description));
 
   return (
     <Card
@@ -168,7 +174,7 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <CalendarIcon sx={{ fontSize: 14, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  {timeAgo}
+                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })} 
                 </Typography>
               </Box>
               <Chip
@@ -207,9 +213,16 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
           }}
-        >
-          {post.description}
-        </Typography>
+          dangerouslySetInnerHTML={{ 
+            __html: DOMPurify.sanitize(
+              decodeURIComponent(post.description.replace(/\+/g, ' ')), 
+              { 
+                ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'br'],
+                ALLOWED_ATTR: ['href', 'target'] 
+              }
+            ) 
+          }}
+        />
 
         {post.is_edited && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -217,6 +230,45 @@ const BlogPostCard = ({ post }: BlogPostCardProps) => {
             <Typography variant="caption" color="text.secondary">
               Last edited {formatDate(post.last_edited)}
             </Typography>
+          </Box>
+        )}
+
+        {showActions && (
+          <Box sx={{ 
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            display: 'flex',
+            gap: 1,
+            opacity: 0,
+            transition: 'opacity 0.2s',
+            '.MuiCard-root:hover &': {
+              opacity: 1
+            }
+          }}>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(post);
+              }}
+              sx={{ minWidth: 'auto', p: 1 }}
+            >
+              <EditIcon sx={{ fontSize: 20 }} />
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(post.id);
+              }}
+              sx={{ minWidth: 'auto', p: 1 }}
+            >
+              <DeleteIcon sx={{ fontSize: 20 }} />
+            </Button>
           </Box>
         )}
       </CardContent>

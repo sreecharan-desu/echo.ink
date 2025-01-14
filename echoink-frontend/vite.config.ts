@@ -10,4 +10,21 @@ export default defineConfig({
       plugins: [tailwindcss(), autoprefixer()],
     },
   },
+  optimizeDeps: {
+    include: [
+      'react-dropzone',
+      'tailwind-merge',
+      'framer-motion',
+      '@tiptap/react',
+      '@tiptap/starter-kit',
+      '@tiptap/extension-link',
+      '@tiptap/extension-code-block',
+      '@tiptap/extension-placeholder'
+    ]
+  },
+  server: {
+    watch: {
+      usePolling: true
+    }
+  }
 });

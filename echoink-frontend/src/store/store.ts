@@ -1,42 +1,45 @@
 import { atom } from 'recoil';
 
-export type Post = {
+export interface Post {
+  id: string;
   title: string;
-  content: string;
-  link: string;
-  id : string;
-  description : string;
-  image_link : string;
-  created_at : string;
-  is_edited : boolean;
-  last_edited : string;
-  User : {
-    _count: {
-      posts: number
-    },
-    created_at: string,
-    email: string,
-    id: string,
-    image_link: string,
-    username: string,
+  description: string;
+  created_at: string;
+  image_link?: string;
+  tags?: string[];
+  User: {
+    username: string;
+    image_link?: string;
+    id: string;
+    _count?: {
+      posts: number;
+    };
+  };
 }
-tags : ['science','maths']
-};
 
-// Define a Recoil atom to store the posts
-export const postsState = atom<Post[]>({
-  key: 'postsState', // unique ID for the atom
-  default: [], // initial state is an empty array
-});
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  image_link?: string;
+  created_at: string;
+  posts: Post[];
+  _count: {
+    posts: number;
+  };
+}
 
-// Define Recoil atom for user data
-export const userAtom = atom({
+export const userAtom = atom<User | null>({
   key: "userAtom",
   default: null,
 });
 
+export const postsState = atom<Post[]>({
+  key: "postsState",
+  default: [],
+});
 
 export const InsighthspostsState = atom<Post[]>({
-  key: 'insightsState', // unique ID for the atom
-  default: [], // initial state is an empty array
+  key: "InsighthspostsState",
+  default: [],
 });

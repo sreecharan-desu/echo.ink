@@ -79,28 +79,68 @@ export const authCreds = async(c:Context,next:Next)=>{
 }
 
 
-export const userAuth = async(c:Context,next:Next)=>{
-    const authorization = await c.req.header('Authorization')
-    const {username} = await c.req.json();const prisma = await getPrismaClient(c);
-    const token = authorization?.split(" ")[1]
-    if(token && token != ''){
-        try{
-            const user_id = await verify(token,c.env.JWT_SECRET)
-            //@ts-ignore
-            const user = await prisma.user.findUnique({where : {id : user_id}})
-            console.log(user)
-            if(user && !(user?.username == username)) return c.json({msg : "AUTH FAILED : This is not your token!",success : false})
-            c.set('userId',user_id)
-            await next()
-        }catch(e){
-            console.log(e)
-            return c.json({
-                msg : "ERROR : Verifying token please try again!",success : false
-            })
-        }
-    }else{
-        return c.json({
-            msg : "FATAL : Auth failed please try again!",success : false
-        })
+export const userAuth = async(c: Context, next: Next) => {
+  try {
+    const authorization = await c.req.header('Authorization');
+    
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return c.json({
+        msg: "No token provided",
+        success: false
+      });
     }
-}
+
+    const token = authorization.split(" ")[1];
+    
+    if (!token) {
+      return c.json({
+        msg: "Invalid token format",
+        success: false
+      });
+    }
+
+    try {
+      //@ts-ignore
+      const decoded = await verify(token, c.env.JWT_SECRET);
+      c.set('userId', decoded);
+      await next();
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return c.json({
+        msg: "Invalid token",
+        success: false
+      });
+    }
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    return c.json({
+      msg: "Authentication failed",
+      success: false
+    });
+  }
+};
+
+// Create a separate middleware for checking username ownership
+export const checkUserOwnership = async(c: Context, next: Next) => {
+  try {
+    const { username } = await c.req.json();
+    const prisma = await getPrismaClient(c);
+    //@ts-ignore
+    const user = await prisma.user.findUnique({ where: { id: c.get('userId') } });
+    
+    if (!user || user.username !== username) {
+      return c.json({
+        msg: "AUTH FAILED: This is not your account!",
+        success: false
+      });
+    }
+    
+    await next();
+  } catch (error) {
+    console.error('User ownership check error:', error);
+    return c.json({
+      msg: "Error verifying user ownership",
+      success: false
+    });
+  }
+};

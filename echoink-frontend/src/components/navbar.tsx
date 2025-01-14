@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, Pen, User, X } from "lucide-react";
+import { Menu, Pen, User, X, Home, BookOpen, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as React from "react";
 import { useRecoilState } from "recoil";
@@ -12,9 +12,19 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useRecoilState(userAtom);
+  const [scrolled, setScrolled] = useState(false);
   const navigateTo = useNavigate();
 
-  const handleNavigation = (path) => {
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleNavigation = (path: string) => {
     setMenuOpen(false);
     navigateTo(path);
   };
@@ -26,14 +36,12 @@ export default function Navbar() {
     handleNavigation("/");
   };
 
-  // Function to check if token exists
-  const checkAuth = () => {
+  const checkAuth = (): boolean => {
     const token = localStorage.getItem("token");
     return !!token;
   };
 
   useEffect(() => {
-    // Set initial authentication state
     setIsAuthenticated(checkAuth());
   }, []);
 
@@ -48,11 +56,10 @@ export default function Navbar() {
       try {
         const token = localStorage.getItem("token");
         const response = await fetch(`${BASE_URL}/getprofile`, {
-          method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          },
+          }
         });
 
         if (!response.ok) {
@@ -61,7 +68,7 @@ export default function Navbar() {
 
         const data = await response.json();
 
-        if (data && data.user) {
+        if (data?.success && data?.user) {
           setIsAuthenticated(true);
           setUser(data.user);
         } else {
@@ -78,12 +85,12 @@ export default function Navbar() {
     if (checkAuth()) {
       fetchUserProfile();
     }
-  }, [setUser]); // Add setUser to dependencies
+  }, [setUser]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuOpen && !event.target.closest('.mobile-menu')) {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (menuOpen && !target.closest('.mobile-menu')) {
         setMenuOpen(false);
       }
     };
@@ -92,157 +99,195 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
 
-  // Check authentication status on user atom changes
   useEffect(() => {
     setIsAuthenticated(!!user);
   }, [user]);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
-      <div className="container mx-auto px-6 py-3 flex items-center justify-between">
-        {/* Logo Section */}
-        <div
-          className="flex items-center space-x-3 cursor-pointer"
-          onClick={() => handleNavigation("/")}
-        >
-          <img src="/vite.svg" alt="Logo" className="h-8 w-8" />
-          <span className="text-xl font-bold text-black">echo.ink</span>
+    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+      scrolled ? 'bg-white/80 backdrop-blur-md shadow-lg' : 'bg-white'
+    }`}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo Section */}
+          <div className="flex-shrink-0">
+            <div
+              className="flex items-center space-x-2 cursor-pointer group"
+              onClick={() => handleNavigation("/")}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && handleNavigation("/")}
+            >
+              <img 
+                src="/vite.svg" 
+                alt="Logo" 
+                className="h-8 w-8 transition-transform group-hover:rotate-12" 
+              />
+              <span className="text-xl font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
+                echo.ink
+              </span>
+            </div>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex md:flex-1 justify-center px-8">
+            <div className="w-full max-w-2xl">
+              <React.Suspense fallback={
+                <div className="w-full h-10 bg-gray-100 animate-pulse rounded-lg" />
+              }>
+                <SearchBar />
+              </React.Suspense>
+            </div>
+          </div>
+
+          {/* Desktop Right Section */}
+          <div className="hidden md:flex items-center space-x-4">
+            {isAuthenticated && user ? (
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => handleNavigation('/write')}
+                  className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-all duration-200 flex items-center space-x-2 transform hover:scale-105 active:scale-95"
+                >
+                  <Pen size={16} />
+                  <span>Write</span>
+                </button>
+
+                <div className="relative group">
+                  <div className="flex items-center space-x-2 cursor-pointer">
+                    {user?.image_link ? (
+                      <img
+                        src={user.image_link}
+                        alt={user.username}
+                        className="w-10 h-10 rounded-full border-2 border-transparent group-hover:border-black transition-all duration-200 object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-gray-200 transition-all duration-200">
+                        <User size={20} className="text-gray-600" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  <div className="absolute right-0 top-full mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
+                    <div className="bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 py-1 overflow-hidden">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">{user.username}</p>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleNavigation("/")}
+                        className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                      >
+                        <Home size={16} />
+                        <span>Home</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleNavigation("/profile")}
+                        className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
+                      >
+                        <BookOpen size={16} />
+                        <span>Profile</span>
+                      </button>
+                      
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                      >
+                        <LogOut size={16} />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleNavigation('/signin')}
+                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-all duration-200 flex items-center space-x-2 transform hover:scale-105 active:scale-95"
+              >
+                <User size={16} />
+                <span>Sign In</span>
+              </button>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
 
-        {/* Search Bar Section */}
-        <div className="hidden md:flex flex-1 max-w-lg mx-6">
-          <React.Suspense fallback={<div className="w-full h-10 bg-gray-100 animate-pulse rounded-md" />}>
+        {/* Mobile Search */}
+        <div className="md:hidden py-3">
+          <React.Suspense fallback={
+            <div className="w-full h-10 bg-gray-100 animate-pulse rounded-lg" />
+          }>
             <SearchBar />
           </React.Suspense>
         </div>
-
-        {/* Right Section */}
-        <div className="flex items-center space-x-4">
-          {isAuthenticated && user ? (
-            <>
-              {/* Write Button for Authenticated Users */}
-              <button
-                onClick={() => handleNavigation('/write')}
-                className="hidden md:flex items-center px-4 py-2 bg-black text-white text-sm rounded-md shadow hover:bg-white border-2 border-black hover:text-black transition-all duration-200"
-              >
-                <Pen size={12} className="mr-2" />
-                <span>Write</span>
-              </button>
-
-              {/* User Profile Section */}
-              <div className="flex items-center space-x-3 cursor-pointer group relative">
-                <div
-                  className="flex items-center space-x-2"
-                  onClick={() => handleNavigation('/profile')}
-                >
-                  {user?.image_link ? (
-                    <img
-                      src={user.image_link}
-                      alt={user.username}
-                      className="w-8 h-8 rounded-full border border-gray-300 object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
-                      <User size={20} />
-                    </div>
-                  )}
-                  <span className="text-gray-800 font-medium hidden md:inline">
-                    {user?.username}
-                  </span>
-                </div>
-
-                {/* Dropdown menu */}
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-50">
-                  <button
-                    onClick={() => handleNavigation("/profile")}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <button
-              onClick={() => handleNavigation('/signin')}
-              className="hidden md:flex items-center px-4 py-2 bg-black text-white text-sm rounded-md shadow hover:bg-white border-2 border-black hover:text-black transition-all duration-200"
-            >
-              <Pen size={12} className="mr-2" />
-              <span>Write</span>
-            </button>
-          )}
-
-          {/* Mobile Menu Button */}
-          <button
-            aria-label="Toggle menu"
-            className="md:hidden"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Search Bar for Mobile */}
-      <div className="md:hidden px-4 pb-3">
-        <React.Suspense fallback={<div className="w-full h-10 bg-gray-100 animate-pulse rounded-md" />}>
-          <SearchBar />
-        </React.Suspense>
       </div>
 
       {/* Mobile Menu */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 mobile-menu">
-          <div className="flex flex-col items-start px-4 py-3 space-y-2">
+        <div className="md:hidden border-t border-gray-100 animate-fade-in">
+          <div className="px-4 py-3 space-y-3">
             {isAuthenticated && user ? (
               <>
-                <div className="flex items-center space-x-2 px-4 py-2">
+                <div className="flex items-center space-x-3 px-2 py-3">
                   {user?.image_link ? (
                     <img
                       src={user.image_link}
                       alt={user.username}
-                      className="w-8 h-8 rounded-full border border-gray-300 object-cover"
+                      className="w-10 h-10 rounded-full border-2 border-gray-200"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
-                      <User size={20} />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User size={20} className="text-gray-600" />
                     </div>
                   )}
-                  <span className="text-gray-800 font-medium">
-                    {user?.username}
-                  </span>
+                  <div>
+                    <p className="font-medium text-gray-900">{user.username}</p>
+                  </div>
                 </div>
+
                 <button
                   onClick={() => handleNavigation('/write')}
-                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
                 >
-                  Write
+                  <Pen size={16} />
+                  <span>Write</span>
                 </button>
+
                 <button
                   onClick={() => handleNavigation('/profile')}
-                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  className="w-full px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center space-x-2"
                 >
-                  Profile
+                  <BookOpen size={16} />
+                  <span>Profile</span>
                 </button>
+
                 <button
                   onClick={handleSignOut}
-                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 rounded-md"
+                  className="w-full px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center space-x-2"
                 >
-                  Sign Out
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
                 </button>
               </>
             ) : (
               <button
                 onClick={() => handleNavigation('/signin')}
-                className="w-full text-left px-4 py-2 bg-black text-white text-sm rounded-md shadow hover:bg-gray-800 transition"
+                className="w-full px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
               >
-                Sign In
+                <User size={16} />
+                <span>Sign In</span>
               </button>
             )}
           </div>
