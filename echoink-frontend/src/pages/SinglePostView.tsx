@@ -10,7 +10,8 @@ import { BASE_URL } from "./Home";
 import { Post } from "../store/store";
 import { toast } from "react-toastify";
 import { Share2 } from "lucide-react";
-import * as DOMPurify from "dompurify";
+//@ts-ignore
+import DOMPurify from 'dompurify';
 
 const SinglePostView = () => {
   const { postId } = useParams();
