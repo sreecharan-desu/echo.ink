@@ -202,15 +202,17 @@ const SinglePostView = () => {
           color="text.secondary"
           sx={{
             mb: 4,
-            display: "-webkit-box",
-            WebkitLineClamp: 6,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            fontSize: "1rem",
-            lineHeight: 1.8,
+            fontSize: "1.1rem", // Slightly larger font for readability
+            lineHeight: 2, // More line spacing
+            color: "text.primary",
+            fontFamily: "Arial, sans-serif", // Cleaner font
             whiteSpace: "pre-wrap",
-            textOverflow: "ellipsis",
-          }}
+            textAlign: "justify",
+            padding: "1rem",
+            backgroundColor: "#f9f9f9", // Light background for emphasis
+            borderRadius: "8px", // Rounded edges
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+          }}      
           dangerouslySetInnerHTML={{ 
             __html: DOMPurify.sanitize(
               decodeURIComponent(post.description.replace(/\+/g, ' ')), 
