@@ -1,12 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
-import { useRecoilValue } from "recoil";
-import { Post, userAtom } from "../store/store";
 import { useNavigate } from "react-router-dom";
 import { Edit2, Image, Mail, User, Calendar, BookOpen} from "lucide-react";
 import { toast } from "react-toastify";
 import { BASE_URL } from "./Home";
 import * as React from "react";
 import { Dialog, DialogActions, DialogContentText,DialogTitle, DialogContent,TextField, Button } from "@mui/material";
+import { Post } from "../store/store";
 
 const PostCard = React.lazy(() => import("../components/postCard"));
 

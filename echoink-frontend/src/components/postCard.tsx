@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, Typography, Box, Chip, Avatar, Button } from "@mui/material";
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { useState } from "react";
-import DOMPurify from 'dompurify';
+//@ts-expect-error ->not an error
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import * as DOMPurify from "dompurify";
+
 interface PostData {
   id: string;
   created_at: string;
@@ -47,8 +49,6 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions }: BlogPostCardProps
   // Calculate read time
   const readTime = Math.ceil(post.description.split(" ").length / 200);
 
-  // Calculate the time ago
-  const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
 
   // Navigate to post details
   const handlePostClick = () => {

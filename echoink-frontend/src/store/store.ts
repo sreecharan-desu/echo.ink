@@ -5,13 +5,17 @@ export interface Post {
   title: string;
   description: string;
   created_at: string;
-  image_link?: string;
-  tags?: string[];
+  image_link: string | null;
+  is_edited: boolean;
+  last_edited: string | null;
+  tags: string[];
   User: {
-    username: string;
-    image_link?: string;
     id: string;
-    _count?: {
+    username: string;
+    email: string;
+    created_at: string;
+    image_link: string | null;
+    _count: {
       posts: number;
     };
   };

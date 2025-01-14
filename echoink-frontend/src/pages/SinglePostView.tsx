@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, Typography, Box, Chip, Avatar, Skeleton } from "@mui/material";
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Facebook, Twitter, WhatsApp } from "@mui/icons-material";
+//@ts-expect-error ->not an error
 import { formatDistanceToNow } from "date-fns";
 import { FacebookShareButton, WhatsappShareButton, TwitterShareButton } from "react-share";
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,7 +10,7 @@ import { BASE_URL } from "./Home";
 import { Post } from "../store/store";
 import { toast } from "react-toastify";
 import { Share2 } from "lucide-react";
-import DOMPurify from "dompurify";
+import * as DOMPurify from "dompurify";
 
 const SinglePostView = () => {
   const { postId } = useParams();
@@ -41,7 +42,7 @@ const SinglePostView = () => {
   };
 
   const readTime = post ? Math.ceil(post.description.split(" ").length / 200) : 0;
-  const timeAgo = post ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : "";
+  const timeAgo = post ? formatDistanceToNow(new Date(post.created_at), new Date(), { addSuffix: true }) : "";
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-IN", {
