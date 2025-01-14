@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, Typography, Box, Chip, Avatar, Button } from "@mui/material";
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow as formatDistance } from "date-fns/formatDistanceToNow";
 import { useState } from "react";
-import DOMPurify from 'dompurify';
+const DOMPurify = require('dompurify');
 
 interface PostData {
   id: string;
@@ -65,7 +65,7 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions = false }: BlogPostC
   const sanitizedDescription = () => {
     try {
       const decodedDescription = decodeURIComponent(post.description.replace(/\+/g, ' '));
-      return DOMPurify.sanitize(decodedDescription, {
+      return DOMPurify(window).sanitize(decodedDescription, {
         ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'br'],
         ALLOWED_ATTR: ['href', 'target']
       });
@@ -174,7 +174,7 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions = false }: BlogPostC
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <CalendarIcon sx={{ fontSize: 14, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                  {formatDistance(new Date(post.created_at), { addSuffix: true })}
                 </Typography>
               </Box>
               <Chip
