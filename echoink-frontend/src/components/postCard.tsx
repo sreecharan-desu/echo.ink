@@ -3,8 +3,8 @@ import { Card, CardContent, Typography, Box, Chip, Avatar, Button } from "@mui/m
 import { AccessTime as AccessTimeIcon, CalendarToday as CalendarIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { formatDistanceToNow as formatDistance } from "date-fns/formatDistanceToNow";
 import { useState } from "react";
-const DOMPurify = require('dompurify');
-
+//@ts-ignore
+import DOMPurify from 'dompurify';
 interface PostData {
   id: string;
   created_at: string;
@@ -62,10 +62,11 @@ const BlogPostCard = ({ post, onDelete, onEdit, showActions = false }: BlogPostC
     navigate(`/author/${post.User.id}`);
   };
 
+
   const sanitizedDescription = () => {
     try {
       const decodedDescription = decodeURIComponent(post.description.replace(/\+/g, ' '));
-      return DOMPurify(window).sanitize(decodedDescription, {
+      return DOMPurify.sanitize(decodedDescription, {
         ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'br'],
         ALLOWED_ATTR: ['href', 'target']
       });

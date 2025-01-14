@@ -19,7 +19,8 @@ export default defineConfig({
       '@tiptap/starter-kit',
       '@tiptap/extension-link',
       '@tiptap/extension-code-block',
-      '@tiptap/extension-placeholder'
+      '@tiptap/extension-placeholder',
+      'dompurify'
     ]
   },
   server: {
