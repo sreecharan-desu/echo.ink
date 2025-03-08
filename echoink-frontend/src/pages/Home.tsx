@@ -57,7 +57,7 @@ const FeaturedCategories = ({ posts, onCategoryClick, selectedCategory }: {
     </Paper>
   );
 };
-export const BASE_URL = 'https://echoink-backend.cloudflare-apis.workers.dev';
+export const BASE_URL = 'https://echoink-backend.sr3x0r.workers.dev';
 // Latest Insights Component
 const LatestInsights = ({ posts }: { posts: Post[] }) => {
   // Get top contributors based on post count
