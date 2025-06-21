@@ -1,1456 +1,1177 @@
-# echo.ink Documentation
+## Prisma Client Initialization and Acceleration in Echoink Backend
 
-Generated on: 2025-04-26 11:35:53
+This document details the `prismaClient.ts` module within the Echoink backend, focusing on its role in initializing and configuring the Prisma client for database interactions. The module leverages Prisma's edge client and the `prisma-extension-accelerate` extension to provide a performant and scalable database access layer within a Hono application.
 
-## Overview
+### Overview
 
-This documentation covers 34 files from the echo.ink codebase.
+The primary function of this module is to provide a centralized and configured Prisma client instance for use throughout the Echoink backend. This client is initialized with the database URL from the Hono context's environment variables and extended with the `withAccelerate` extension. This extension optimizes query performance by leveraging Prisma Accelerate.
 
-## Table of Contents
+### Technical Architecture
 
-### Root
+The module consists of a single function, `getPrismaClient`, which is responsible for creating and configuring the Prisma client.
 
-- [tailwind.config.js](#tailwind-config-js)
+**Components:**
 
-### echoink-backend/prisma
+*   **`prismaClient.ts`**: This module encapsulates the Prisma client initialization logic.
+*   **`@prisma/client/edge`**: Prisma's edge client, optimized for serverless environments.
+*   **`@prisma/extension-accelerate`**: Prisma's extension for query acceleration.
+*   **`hono`**: The Hono web framework, providing the context (`c`) containing the environment variables.
 
-- [prismaClient.ts](#echoink-backend-prisma-prismaclient-ts)
+**Component Relationships:**
 
-### echoink-backend/prisma/migrations/20250111151501_prisma_init
+The `prismaClient.ts` module imports `PrismaClient` from `@prisma/client/edge`, `withAccelerate` from `@prisma/extension-accelerate`, and `Context` from `hono`. It then uses these imported components to create and configure the Prisma client instance.
 
-- [migration.sql](#echoink-backend-prisma-migrations-20250111151501_prisma_init-migration-sql)
+**Data Flow:**
 
-### echoink-backend/prisma/migrations/20250111162522_ignored_email
+1.  The `getPrismaClient` function is called with a Hono `Context` object.
+2.  The function retrieves the `DATABASE_URL` from the `c.env` object.
+3.  A new `PrismaClient` instance is created, configured with the `DATABASE_URL`.
+4.  The `withAccelerate` extension is applied to the `PrismaClient` instance.
+5.  The configured Prisma client instance is returned.
 
-- [migration.sql](#echoink-backend-prisma-migrations-20250111162522_ignored_email-migration-sql)
+### Workflow Analysis
 
-### echoink-backend/prisma/migrations/20250112054216_added_image_functionality
+**Workflow: Prisma Client Initialization**
 
-- [migration.sql](#echoink-backend-prisma-migrations-20250112054216_added_image_functionality-migration-sql)
+This workflow describes the steps involved in initializing the Prisma client with acceleration.
 
-### echoink-backend/prisma/migrations/20250112160909_added_tags_for_posts
+```mermaid
+sequenceDiagram
+    participant Hono App
+    participant getPrismaClient
+    participant PrismaClient
+    participant withAccelerate
 
-- [migration.sql](#echoink-backend-prisma-migrations-20250112160909_added_tags_for_posts-migration-sql)
+    Hono App->>getPrismaClient: Call getPrismaClient(c: Context)
+    activate getPrismaClient
+    getPrismaClient->>PrismaClient: new PrismaClient({datasourceUrl: c.env.DATABASE_URL})
+    activate PrismaClient
+    PrismaClient-->>getPrismaClient: PrismaClient Instance
+    deactivate PrismaClient
+    getPrismaClient->>withAccelerate: prisma.$extends(withAccelerate())
+    activate withAccelerate
+    withAccelerate-->>getPrismaClient: Extended PrismaClient Instance
+    deactivate withAccelerate
+    getPrismaClient-->>Hono App: Return Extended PrismaClient Instance
+    deactivate getPrismaClient
+```
 
-### echoink-backend/prisma/migrations/20250114093518_added_primary_keys
+**Explanation:**
 
-- [migration.sql](#echoink-backend-prisma-migrations-20250114093518_added_primary_keys-migration-sql)
+1.  The Hono application calls the `getPrismaClient` function, passing the Hono context.
+2.  `getPrismaClient` creates a new `PrismaClient` instance, configuring it with the database URL from the context's environment.
+3.  The `withAccelerate` extension is applied to the `PrismaClient` instance, enhancing its query performance.
+4.  The extended `PrismaClient` instance is returned to the Hono application.
 
-### echoink-backend/src
+### Code Examples
 
-- [index.ts](#echoink-backend-src-index-ts)
-- [userMiddleware.ts](#echoink-backend-src-usermiddleware-ts)
-
-### echoink-backend/utils
-
-- [email_bodies.ts](#echoink-backend-utils-email_bodies-ts)
-- [render_txt.ts](#echoink-backend-utils-render_txt-ts)
-- [sendEmail.ts](#echoink-backend-utils-sendemail-ts)
-
-### echoink-frontend
-
-- [index.html](#echoink-frontend-index-html)
-- [tailwind.config.js](#echoink-frontend-tailwind-config-js)
-- [vite.config.ts](#echoink-frontend-vite-config-ts)
-
-### echoink-frontend/src
-
-- [App.css](#echoink-frontend-src-app-css)
-- [App.tsx](#echoink-frontend-src-app-tsx)
-- [index.css](#echoink-frontend-src-index-css)
-- [main.tsx](#echoink-frontend-src-main-tsx)
-- [vite-env.d.ts](#echoink-frontend-src-vite-env-d-ts)
-
-### echoink-frontend/src/components
-
-- [RichTextEditor.tsx](#echoink-frontend-src-components-richtexteditor-tsx)
-- [SearchBar.tsx](#echoink-frontend-src-components-searchbar-tsx)
-- [layout.tsx](#echoink-frontend-src-components-layout-tsx)
-- [loadingcomponent.tsx](#echoink-frontend-src-components-loadingcomponent-tsx)
-- [navbar.tsx](#echoink-frontend-src-components-navbar-tsx)
-- [postCard.tsx](#echoink-frontend-src-components-postcard-tsx)
-
-### echoink-frontend/src/pages
-
-- [AuthorView.tsx](#echoink-frontend-src-pages-authorview-tsx)
-- [Home.tsx](#echoink-frontend-src-pages-home-tsx)
-- [Profile.tsx](#echoink-frontend-src-pages-profile-tsx)
-- [SinglePostView.tsx](#echoink-frontend-src-pages-singlepostview-tsx)
-- [Write.tsx](#echoink-frontend-src-pages-write-tsx)
-- [signin.tsx](#echoink-frontend-src-pages-signin-tsx)
-- [signup.tsx](#echoink-frontend-src-pages-signup-tsx)
-
-### echoink-frontend/src/store
-
-- [store.ts](#echoink-frontend-src-store-store-ts)
-
-## File Documentation
-
-### Root
-
-<a id='tailwind-config-js'></a>
-
-#### tailwind.config.js
-
-*Path: tailwind.config.js*
-
-1.  **Purpose:** This file configures the Tailwind CSS framework for the project, customizing the default styles and extending them with project-specific design requirements. It defines the styling rules for various HTML elements and sets up the typography settings.
-
-2.  **Key Functionality:**
-
-    -   **`module.exports`:**  Exports the configuration object for Tailwind CSS.
-
-        -   **`content`:** An array of file paths that Tailwind CSS should scan to generate utility classes.  This ensures that only the necessary CSS is generated, optimizing performance.  It uses glob patterns to include all `js`, `jsx`, `ts`, and `tsx` files within the `src` directory.
-
-        -   **`theme`:**  Allows customization of the default Tailwind theme.
-
-            -   **`extend`:** Extends the default theme instead of overriding it completely. This allows for adding or modifying specific styles while keeping the base Tailwind styles intact.
-
-                -   **`typography`:** Configures the typography styles.
-
-                    -   **`DEFAULT`:** Defines the default typography styles.
-
-                        -   **`css`:** Contains the CSS rules for various HTML elements.  It customizes styles for headings (h1, h2), strong text, code blocks, preformatted text, and blockquotes.  Specific styles include font sizes, weights, margins, padding, background colors, border styles, and font styles.  The `maxWidth: 'none'` setting overrides the default maximum width applied to prose elements by Tailwind's typography plugin.  The customizations for `code`, `code::before`, and `code::after` ensure consistent styling for inline code snippets.  Similarly, the styles for `pre` and `pre code` target block code sections.
-
-        -   **`plugins`:** An array of Tailwind CSS plugins to be included.
-
-            -   **`require('@tailwindcss/typography')`:** Includes the official Tailwind CSS typography plugin, which provides sensible default styles for prose content. This plugin is configured by the `typography` section within the `theme`.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Dependencies:** This file depends on the `tailwindcss` and `@tailwindcss/typography` npm packages.
-    -   **Relationships:** This file is used by the Tailwind CSS build process to generate the CSS styles used throughout the project. It interacts with the HTML structure and any CSS classes applied within the project's components.  The `content` field ensures that the generated CSS includes styles for all components defined in the specified file paths.
-
-4.  **Usage Example:**
-
-    This file is not directly used in the application code.  It's a configuration file for Tailwind CSS.  The styles defined in this file are applied to HTML elements by using the corresponding Tailwind CSS utility classes in the project's components (e.g., JSX, TSX files within the `src` directory).
-
-5.  **Technical Notes:**
-
-    -   The `extend` option within the `theme` section is a best practice for customizing Tailwind CSS. It prevents accidental overriding of default styles and promotes maintainability.
-    -   The `content` array should include all files that use Tailwind CSS classes to ensure that the necessary styles are generated.  The use of glob patterns simplifies this process.
-    -   The typography plugin simplifies the styling of prose content and provides a good starting point for custom typography.  The `DEFAULT` configuration within the `typography` section allows for fine-grained control over the typography styles.  The removal of `maxWidth` on prose elements allows content to fill the available width.  The specific styling of `code` elements within `pre` blocks ensures correct inheritance and avoids conflicts.
-    -   Using a dedicated configuration file for Tailwind CSS keeps the styling logic centralized and organized.
-
----
-
-### echoink-backend/prisma
-
-<a id='echoink-backend-prisma-prismaclient-ts'></a>
-
-#### prismaClient.ts
-
-*Path: echoink-backend/prisma/prismaClient.ts*
-
-1. **Purpose:** This file provides a function to create and return a Prisma client instance, configured with the provided database URL and the Accelerate extension. It serves as a centralized point for accessing the database within the application.
-
-2. **Key Functionality:**
-
-- **`getPrismaClient(c: Context)`:**
-    - **Parameters:**
-        - `c`:  A Hono context object, providing access to environment variables like `DATABASE_URL`.
-    - **Return Type:** `Promise<PrismaClient>` - A promise that resolves to an initialized Prisma client instance.
-    - **Implementation:**
-        - Creates a new `PrismaClient` instance.
-        - The `datasourceUrl` is retrieved from the Hono context's environment variables (`c.env.DATABASE_URL`). This allows for dynamic configuration of the database connection based on the environment.
-        - The `withAccelerate()` extension is applied to the Prisma client.  Prisma Accelerate improves database performance by optimizing queries and reducing latency.
-        - The initialized Prisma client is returned.
-    - **Error Handling:**  The function does not explicitly handle errors related to database connection or Prisma client initialization. These would need to be handled by the calling function.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `@prisma/client/edge`: Imports the necessary types and classes for interacting with Prisma. The `/edge` import is specifically for edge runtimes like Cloudflare Workers, Vercel Edge Functions, etc.
-    - `@prisma/extension-accelerate`: Imports the Prisma Accelerate extension for performance optimization.
-    - `hono/Context`: Imports the `Context` type from the Hono web framework. This is used to access environment variables.
-- **Code Relationships:** This file is likely used by other modules in the application that need to interact with the database.  It provides a single, consistent way to obtain a configured Prisma client.
-
-4. **Usage Example:**
+**Example: Retrieving and Using the Prisma Client**
 
 ```typescript
-import { getPrismaClient } from './prisma/prismaClient';
-import { Context } from 'hono'
+import { Hono } from 'hono'
+import { getPrismaClient } from './prisma/prismaClient'
 
-// Inside a Hono handler function
-export const handler = async (c: Context) => {
+const app = new Hono()
+
+app.get('/users', async (c) => {
   const prisma = await getPrismaClient(c);
   const users = await prisma.user.findMany();
-  // ... further database operations ...
-  await prisma.$disconnect(); // Important to disconnect after usage, especially in serverless environments
   return c.json(users);
+})
+
+export default app
+```
+
+In this example, the `getPrismaClient` function is used within a Hono route handler to retrieve the configured Prisma client. The client is then used to fetch all users from the database.
+
+### Usage Guide
+
+1.  **Import `getPrismaClient`:** Import the `getPrismaClient` function into the module where you need to access the database.
+2.  **Call `getPrismaClient`:** Call the `getPrismaClient` function, passing the Hono context (`c`) as an argument. This will return the configured Prisma client instance.
+3.  **Use the Prisma Client:** Use the returned Prisma client instance to perform database operations, such as querying, creating, updating, and deleting data.
+
+### Implementation Details and Gotchas
+
+*   **Environment Variables:** Ensure that the `DATABASE_URL` environment variable is properly set in your Hono application's environment. This variable should contain the connection string to your database.
+*   **Asynchronous Initialization:** The `getPrismaClient` function is asynchronous, so you must use `await` when calling it.
+*   **Prisma Accelerate:** The `withAccelerate` extension requires a Prisma Data Proxy. Ensure that you have configured the Data Proxy correctly in your Prisma schema and environment.
+
+### Common Issues and Troubleshooting
+
+*   **Database Connection Errors:** If you encounter database connection errors, verify that the `DATABASE_URL` environment variable is correct and that your database server is running and accessible.
+*   **Prisma Accelerate Errors:** If you encounter errors related to Prisma Accelerate, ensure that you have configured the Data Proxy correctly and that your Prisma schema is compatible with Accelerate.
+*   **Type Errors:** If you encounter type errors, ensure that you have installed the correct Prisma client version and that your TypeScript configuration is properly set up.
+
+### Advanced Configuration and Customization Options
+
+*   **Prisma Client Configuration:** You can customize the Prisma client by passing additional options to the `PrismaClient` constructor. For example, you can configure logging, error handling, and connection pooling.
+*   **Prisma Accelerate Configuration:** You can configure Prisma Accelerate by passing options to the `withAccelerate` extension. For example, you can configure the cache TTL and the number of retries.
+
+### Performance Considerations and Optimization Strategies
+
+*   **Connection Pooling:** Prisma's built-in connection pooling helps to improve performance by reusing database connections.
+*   **Query Optimization:** Use Prisma's query optimization features, such as eager loading and filtering, to reduce the number of database queries.
+*   **Caching:** Prisma Accelerate provides caching capabilities that can significantly improve query performance.
+
+### Security Implications and Best Practices
+
+*   **Database Credentials:** Protect your database credentials by storing them in environment variables and avoiding hardcoding them in your code.
+*   **Input Validation:** Validate all user input to prevent SQL injection attacks.
+*   **Principle of Least Privilege:** Grant database users only the privileges they need to perform their tasks.
+
+### Enhanced Flow and Connection Documentation
+
+**Dependency Chain:**
+
+```
+Hono App --> prismaClient.ts --> @prisma/client/edge
+prismaClient.ts --> @prisma/extension-accelerate
+```
+
+**Error Propagation:**
+
+Errors during Prisma client initialization or database operations will be propagated to the Hono application, where they can be handled appropriately.
+
+**Connection Example:**
+
+```typescript
+// Example of using the Prisma client to create a new user
+import { getPrismaClient } from './prisma/prismaClient';
+import { Context } from 'hono';
+
+async function createUser(c: Context, email: string, name: string) {
+  const prisma = await getPrismaClient(c);
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email: email,
+        name: name,
+      },
+    });
+    return user;
+  } catch (error) {
+    console.error("Failed to create user:", error);
+    throw error; // Re-throw the error to be handled by the caller
+  }
+}
+```
+
+This example demonstrates how to use the Prisma client to create a new user in the database. It also includes error handling to catch any exceptions that may occur during the database operation.
+
+**Workflow Visualization: Error Handling**
+
+This diagram illustrates how errors are handled during the Prisma client initialization and usage.
+
+```mermaid
+sequenceDiagram
+    participant Hono App
+    participant getPrismaClient
+    participant PrismaClient
+    participant Database
+
+    Hono App->>getPrismaClient: Call getPrismaClient(c: Context)
+    activate getPrismaClient
+    getPrismaClient->>PrismaClient: new PrismaClient({datasourceUrl: c.env.DATABASE_URL})
+    activate PrismaClient
+    PrismaClient-->>getPrismaClient: PrismaClient Instance or Error
+    deactivate PrismaClient
+    alt Initialization Error
+        getPrismaClient-->>Hono App: Throw Error
+        Hono App->>Hono App: Handle Error
+    else Success
+        getPrismaClient-->>Hono App: Return PrismaClient Instance
+        Hono App->>PrismaClient: prisma.user.create(...)
+        activate PrismaClient
+        PrismaClient->>Database: Execute Query
+        alt Query Error
+            Database-->>PrismaClient: Error
+            PrismaClient-->>Hono App: Throw Error
+            Hono App->>Hono App: Handle Error
+        else Success
+            Database-->>PrismaClient: Data
+            PrismaClient-->>Hono App: Return Data
+        end
+        deactivate PrismaClient
+    end
+    deactivate getPrismaClient
+```
+
+**Explanation:**
+
+1.  The Hono app calls `getPrismaClient`.
+2.  `getPrismaClient` attempts to initialize the Prisma client.
+3.  If initialization fails (e.g., invalid `DATABASE_URL`), an error is thrown back to the Hono app for handling.
+4.  If initialization succeeds, the Hono app uses the Prisma client to execute a database query.
+5.  If the query fails, the database returns an error, which is propagated back to the Hono app for handling.
+6.  If the query succeeds, the database returns the requested data to the Hono app.
+
+This documentation provides a comprehensive overview of the `prismaClient.ts` module, its role in initializing and configuring the Prisma client, and its integration with the Hono web framework. It includes detailed explanations, code examples, and troubleshooting tips to help developers effectively use this module in their Echoink backend applications.
+
+## AuthorView Component Documentation
+
+This document provides a comprehensive overview of the `AuthorView` component, a React component responsible for displaying author profiles and their associated posts within the Echoink application. It covers the component's functionality, architecture, data flow, usage, and potential issues.
+
+### Overview
+
+The `AuthorView` component is a crucial part of the Echoink frontend, enabling users to view detailed information about specific authors and browse their published posts. It fetches author data from the backend API based on the author's ID, renders the author's profile information (avatar, username, bio, etc.), and displays a list of their posts using the `PostCard` component. This component enhances user engagement by providing a dedicated space for exploring content created by individual authors.
+
+### Technical Architecture
+
+The `AuthorView` component is built using React and leverages several key libraries and components:
+
+*   **React:** The core UI library for building the component's structure and managing its state.
+*   **`react-router-dom`:** Used for accessing the `authorId` from the URL parameters via the `useParams` hook.
+*   **`@mui/material`:** Provides pre-built UI components like `Avatar`, `Box`, `Chip`, `Typography`, and `Skeleton` for styling and layout.
+*   **`PostCard`:** A custom component (lazily loaded) responsible for rendering individual posts.
+*   **`BASE_URL`:** A constant defining the base URL of the Echoink backend API.
+*   **`Post` and `Author` Types:** Typescript types defining the structure of the data received from the API.
+
+The component's architecture can be summarized as follows:
+
+1.  **Initialization:** The component retrieves the `authorId` from the URL using `useParams`.
+2.  **Data Fetching:** It uses the `getAuthorDetails` function to fetch author data (including the author's posts) from the backend API.
+3.  **State Management:** The component uses the `useState` hook to manage the following state variables:
+    *   `author`: Stores the fetched author object (or `null` if not found).
+    *   `posts`: Stores the array of posts associated with the author.
+    *   `loading`: Indicates whether the data is currently being fetched.
+4.  **Rendering:** Based on the state, the component renders:
+    *   A loading state with `Skeleton` components while `loading` is true.
+    *   An "Author not found" message if `author` is null.
+    *   The author's profile information and a list of their posts if `author` is populated.
+
+### Data Flow
+
+The data flow within the `AuthorView` component can be visualized as follows:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant AuthorView
+    participant API
+
+    User->>AuthorView: Navigates to /author/:authorId
+    AuthorView->>AuthorView: Extracts authorId using useParams
+    AuthorView->>API: getAuthorDetails(authorId)
+    API-->>AuthorView: Author data (including posts)
+    AuthorView->>AuthorView: Updates state (author, posts, loading)
+    AuthorView->>User: Renders author profile and posts
+```
+
+**Step-by-step analysis:**
+
+1.  **User Navigation:** A user navigates to the author view page, e.g., `/author/123`.
+2.  **`authorId` Extraction:** The `useParams` hook extracts the `authorId` (e.g., "123") from the URL.
+3.  **API Request:** The `getAuthorDetails` function is called with the `authorId` to fetch the author's data from the backend API.
+4.  **Data Retrieval:** The API returns the author's data, including their profile information and an array of posts.
+5.  **State Update:** The `AuthorView` component updates its state with the fetched author data and posts. The `loading` state is set to `false`.
+6.  **Rendering:** The component re-renders, displaying the author's profile information and a list of their posts using the `PostCard` component.
+
+### Code Examples
+
+#### Fetching Author Details
+
+The `getAuthorDetails` function is responsible for fetching author data from the backend API:
+
+```typescript
+const getAuthorDetails = async (userId: string) => {
+    const response = await fetch(`${BASE_URL}/author/${userId}`);
+    const data = await response.json();
+    return data;
 };
-
 ```
 
-5. **Technical Notes:**
+This function takes the `userId` as input, constructs the API endpoint URL using `BASE_URL`, makes a `fetch` request to the API, and returns the parsed JSON response.
 
-- The use of `c.env.DATABASE_URL` makes the database connection configurable through environment variables, which is a best practice for security and portability.
-- The `withAccelerate()` extension is crucial for performance, especially in serverless environments.
-- Disconnecting the Prisma client after each operation (`prisma.$disconnect()`) is essential in serverless functions to prevent connection leaks and ensure efficient resource usage.  This is particularly important in environments like Cloudflare Workers or Vercel Edge Functions.
-- The use of the edge runtime version of Prisma (`@prisma/client/edge`) indicates that this application is designed for a serverless edge environment.
+#### Using `useEffect` to Fetch Data
 
-
----
-
-
-There are no other files provided, so no further documentation can be generated.  If you provide additional files, I can create documentation for them following the same structure and principles.  Remember to emphasize the relationships between the files and how they work together within the overall system architecture.
-
----
-
-### echoink-backend/prisma/migrations/20250111151501_prisma_init
-
-<a id='echoink-backend-prisma-migrations-20250111151501_prisma_init-migration-sql'></a>
-
-#### migration.sql
-
-*Path: echoink-backend/prisma/migrations/20250111151501_prisma_init/migration.sql*
-
-1. **Purpose:** This SQL migration script initializes the database schema for the application, creating the `User` and `Post` tables and defining their relationships.  It's a crucial part of the Prisma ORM setup.
-
-2. **Key Functionality:**
-
-- **`CREATE TABLE "User"`**: Creates the `User` table with columns for `id` (primary key), `username` (unique), `password`, `email`, and `created_at` (timestamp).
-    - `id TEXT NOT NULL`: Unique identifier for the user.
-    - `username TEXT NOT NULL`: User's unique username.
-    - `password TEXT NOT NULL`: User's password (hashed).
-    - `email TEXT NOT NULL`: User's email address.
-    - `created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`: Timestamp indicating user creation time.
-
-- **`CREATE TABLE "Post"`**: Creates the `Post` table with columns for `id` (primary key), `title`, `description`, `created_at` (timestamp), `is_edited` (boolean), `last_edited` (timestamp), and `user_id` (foreign key referencing `User`).
-    - `id TEXT NOT NULL`: Unique identifier for the post.
-    - `title TEXT NOT NULL DEFAULT 'No title'`: Title of the post.
-    - `description TEXT NOT NULL DEFAULT 'No description'`: Description of the post.
-    - `created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`: Timestamp indicating post creation time.
-    - `is_edited BOOLEAN NOT NULL DEFAULT false`: Flag indicating if the post has been edited.
-    - `last_edited TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`: Timestamp of the last edit.
-    - `user_id TEXT NOT NULL`: Foreign key linking the post to its author (User).
-
-- **`CREATE UNIQUE INDEX`**: Creates unique indexes on `User.id`, `User.username`, and `Post.id` for faster lookups and data integrity.
-
-- **`ALTER TABLE "Post" ADD CONSTRAINT ...`**: Establishes a foreign key constraint between `Post` and `User` tables, ensuring referential integrity.  The `ON DELETE RESTRICT` clause prevents deleting a user if they have associated posts. The `ON UPDATE CASCADE` clause ensures that if a user's `id` is updated, the corresponding `user_id` in the `Post` table is also updated.
-
-
-3. **Dependencies and Relationships:**
-
-- **Dependencies:** This script depends on the Prisma ORM and the underlying database system (e.g., PostgreSQL, MySQL).
-- **Relationships:** This file is part of the Prisma migration system.  It defines the initial database schema.  Subsequent migrations will build upon this schema.  The application code will interact with this schema through the Prisma Client.
-
-4. **Usage Example:**  This script is executed by Prisma's migration engine (e.g., `prisma migrate deploy`).  It's not directly used by the application code.
-
-5. **Technical Notes:**
-
-- The `TEXT` data type is used for IDs, which is common in Prisma for compatibility with various databases.  UUIDs are often a good choice for primary keys.
-- Default values are provided for `title` and `description` in the `Post` table.
-- The `is_edited` and `last_edited` fields provide tracking for post modifications.
-- The foreign key constraint ensures data consistency between `User` and `Post` tables.  The `ON DELETE RESTRICT` clause is a crucial data integrity measure.  Consider the implications of `CASCADE` or `SET NULL` for your application's requirements.
-- Indexing `id`, `username`, and other frequently queried fields is crucial for performance, especially as the database grows.
-
----
-
-### echoink-backend/prisma/migrations/20250111162522_ignored_email
-
-<a id='echoink-backend-prisma-migrations-20250111162522_ignored_email-migration-sql'></a>
-
-#### migration.sql
-
-*Path: echoink-backend/prisma/migrations/20250111162522_ignored_email/migration.sql*
-
-1. **Purpose:** This SQL migration script modifies the `User` table schema within the database, specifically altering the default value of the `email` column.  This likely addresses a situation where email registration might be optional or deferred.
-
-2. **Key Functionality:**
-
-- `ALTER TABLE "User" ALTER COLUMN "email" SET DEFAULT '-';`
-    - **Parameters:**  `"User"` (table name), `"email"` (column name), `'-'` (new default value).
-    - **Return Type:** None (database DDL operation).
-    - **Technical Explanation:** This SQL command alters the `User` table's schema by changing the default value for the `email` column to a hyphen ('-'). This means that new user records created after this migration will have a default email value of '-' if no email is explicitly provided during insertion.
-
-3. **Dependencies and Relationships:**
-
-- **Dependencies:** This migration script depends on the Prisma migration framework and the underlying database system (e.g., PostgreSQL, MySQL).  It implicitly relies on the previous state of the `User` table schema.
-- **Code Relationships:** This file is part of the database migration history managed by Prisma.  It's executed sequentially within the migration pipeline, building upon previous schema modifications.  The `User` table is likely central to the application's data model and is referenced by other parts of the backend code.
-
-4. **Usage Example (N/A):**  Migration scripts are executed automatically by Prisma's migration commands (e.g., `prisma migrate deploy`).
-
-5. **Technical Notes:**
-
-- **Design Decision:** Setting a default value (even a placeholder like '-') can simplify application logic by ensuring that the `email` field is never `NULL`. This can prevent potential issues in code that assumes the existence of a value for this field.
-- **Potential Edge Cases:**  Consider the implications of using '-' as a default.  Ensure that application logic handles this special value correctly, differentiating it from valid email addresses.  If email uniqueness is enforced, ensure this default value doesn't create conflicts.  A more robust approach might be to allow `NULL` values and handle them explicitly in the application logic.
-
----
-
-### echoink-backend/prisma/migrations/20250112054216_added_image_functionality
-
-<a id='echoink-backend-prisma-migrations-20250112054216_added_image_functionality-migration-sql'></a>
-
-#### migration.sql
-
-*Path: echoink-backend/prisma/migrations/20250112054216_added_image_functionality/migration.sql*
-
-1. **Purpose:** This SQL migration script adds an `image_link` column to both the `Post` and `User` tables in the database.  This allows storing URLs or paths to images associated with posts and users.
-
-2. **Key Functionality:**
-
-- `ALTER TABLE "Post" ADD COLUMN "image_link" TEXT NOT NULL DEFAULT '';`
-    - Adds a new column named `image_link` to the `Post` table.
-    - The data type is `TEXT`, allowing for variable-length strings (suitable for URLs).
-    - `NOT NULL` constraint ensures that every post must have an image link.
-    - `DEFAULT ''` sets the default value to an empty string if no image link is provided during insertion.
-
-- `ALTER TABLE "User" ADD COLUMN "image_link" TEXT NOT NULL DEFAULT '';`
-    - Performs the same operation as above, but for the `User` table.  This adds the `image_link` column to store user profile images or avatars.
-
-3. **Dependencies and Relationships:**
-
-- **Dependencies:** This migration script depends on the Prisma ORM (Object-Relational Mapper) and the underlying database system (e.g., PostgreSQL, MySQL).  Prisma uses these migrations to manage database schema changes.
-- **Code Relationships:** This migration is part of the application's version control history and is executed sequentially by Prisma.  It likely interacts with other migrations and the application's data models defined in the Prisma schema file (e.g., `schema.prisma`).
-
-4. **Usage Example:**  Prisma's migration CLI commands (e.g., `prisma migrate deploy`) execute this SQL script against the database.  The application code can then interact with the new `image_link` fields on the `Post` and `User` models.
-
-5. **Technical Notes:**
-    - The `NOT NULL` constraint with a default value ensures data integrity.  Consider the implications if `NULL` were allowed – the application would need to handle cases where image links are missing.
-    - Using `TEXT` provides flexibility for storing various types of image links.  If storage space is a concern, and URLs are consistently shorter than a certain length, a `VARCHAR(n)` type could be considered.  However, `TEXT` avoids potential truncation issues.
-    - This migration adds the `image_link` with a default empty string.  If existing data needs to be migrated (e.g., assigning a placeholder image), a separate data migration script or application logic might be required after this schema migration.
-
-
----
-
----
-
-### echoink-backend/prisma/migrations/20250112160909_added_tags_for_posts
-
-<a id='echoink-backend-prisma-migrations-20250112160909_added_tags_for_posts-migration-sql'></a>
-
-#### migration.sql
-
-*Path: echoink-backend/prisma/migrations/20250112160909_added_tags_for_posts/migration.sql*
-
-1. **Purpose:** This SQL migration script adds a "tags" array column to the "Post" table in the database.  This allows posts to be associated with multiple tags for categorization and searchability.
-
-2. **Key Functionality:**
-
-- `ALTER TABLE "Post" ADD COLUMN "tags" TEXT[];`
-    - This SQL statement modifies the existing "Post" table schema.
-    - It adds a new column named "tags".
-    - The data type of the column is `TEXT[]`, representing an array of text strings.  This allows storing multiple tags for each post.
-
-3. **Dependencies and Relationships:**
-
-- **Dependencies:** This migration depends on the Prisma ORM (Object-Relational Mapper) and the underlying database system (e.g., PostgreSQL, MySQL).  Prisma uses these migrations to manage database schema changes.
-- **Code Relationships:** This migration file is part of a sequence of migrations managed by Prisma.  It likely depends on the previous database schema state.  The application code will interact with the "Post" table, including the new "tags" column, through the Prisma client.
-
-4. **Usage Example:**  Prisma migration files are executed by the Prisma CLI (Command Line Interface) using commands like `prisma migrate deploy`.  This specific migration will be applied to the database as part of the deployment process, adding the "tags" column.
-
-5. **Technical Notes:**
-
-- **Design Decision:** Using a `TEXT[]` array type allows efficient storage and querying of multiple tags associated with a single post.  Alternatives like creating a separate join table would introduce more complexity.
-- **Potential Limitations:** Depending on the database system, there might be limitations on the number of elements within a `TEXT[]` array or the overall size of the array.  Consider these limitations when designing the tagging system.
-
-
-
----
-
-
-There are no other files provided to document. If you provide additional files, I can generate documentation for them following the same structure and guidelines.  Remember to provide context about how the files relate to each other within the project.
-
----
-
-### echoink-backend/prisma/migrations/20250114093518_added_primary_keys
-
-<a id='echoink-backend-prisma-migrations-20250114093518_added_primary_keys-migration-sql'></a>
-
-#### migration.sql
-
-*Path: echoink-backend/prisma/migrations/20250114093518_added_primary_keys/migration.sql*
-
-1. **Purpose:** This SQL migration script adds primary key constraints to the `User` and `Post` tables in the database.  This ensures data integrity and improves query performance.
-
-2. **Key Functionality:**
-
-- `ALTER TABLE "Post" ADD CONSTRAINT "Post_pkey" PRIMARY KEY ("id");`
-    - This statement adds a primary key constraint named "Post_pkey" to the `Post` table, using the existing `id` column.  This ensures that each `id` is unique and not null.
-- `ALTER TABLE "User" ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");`
-    - Similarly, this statement adds a primary key constraint named "User_pkey" to the `User` table, using the existing `id` column.
-
-3. **Dependencies and Relationships:**
-
-- **Dependencies:** This migration script depends on the Prisma ORM and the underlying database system (e.g., PostgreSQL, MySQL). It assumes that the `User` and `Post` tables already exist with an `id` column.  It's part of the Prisma migration workflow.
-- **Code Relationships:** This file is part of a sequence of migration files managed by Prisma.  It likely builds upon previous migrations and might be followed by subsequent ones.  The changes made here affect how other parts of the application interact with the `User` and `Post` tables.
-
-4. **Usage Example:** This script is executed by Prisma's migration engine (e.g., `prisma migrate deploy`).  It's not directly called by application code.
-
-5. **Technical Notes:** Adding primary keys is a fundamental database design principle.  It enforces data integrity by preventing duplicate or null `id` values.  It also significantly improves the performance of queries that filter or join on these `id` columns, as the database can leverage indexes created automatically for primary keys.  This migration is crucial for efficient data retrieval and management within the application.
-
----
-
-### echoink-backend/src
-
-<a id='echoink-backend-src-index-ts'></a>
-
-#### index.ts
-
-*Path: echoink-backend/src/index.ts*
-
-1. **Purpose:** This file is the main entry point for the EchoInk backend application. It sets up the Hono server, defines API routes, and handles requests related to user authentication, post management, and profile interactions.
-
-2. **Key Functionality:**
-
-- **`app.get('/', ...)`:**
-    - Parameters: None
-    - Return Type: `Response`
-    - Implementation: Renders the homepage content.
-
-- **`app.post('/signup', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Handles user signup. Validates user credentials, checks username availability, hashes the password, creates a new user in the database, and generates a JWT token. Uses `userCredsValidation` and `usernameAvailability` middleware.
-
-- **`app.post('/signin', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Handles user signin. Validates credentials, retrieves user data, and generates a JWT. Uses `userCredsValidation` and `authCreds` middleware.
-
-- **`app.get('/getbulk', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Retrieves all posts with user details and returns them as JSON.
-
-- **`app.get('/getprofile', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Retrieves the profile of the authenticated user. Uses `userAuth` middleware.
-
-- **`app.post('/createpost', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Creates a new post. Requires authentication (`userAuth` middleware). Validates input and connects the post to the authenticated user.
-
-- **`app.delete('/deletepost/:postId', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Deletes a post by ID. Requires authentication and checks if the authenticated user owns the post.
-
-- **`app.put('/updatepost/:postId', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Updates a post by ID. Requires authentication and ownership check.
-
-- **`app.put('/updateprofile', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Updates the authenticated user's profile. Uses `userAuth` and `checkUserOwnership` middleware.
-
-- **`app.get('/post/:postId', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Retrieves a specific post by ID.
-
-- **`app.get('/posts', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Searches for posts based on a title query.
-
-- **`app.get('/author/:userId', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Retrieves user details and their posts by user ID.
-
-- **`app.get('/*', ...), app.post('/*', ...)`:**
-    - Parameters: `c` (Context)
-    - Return Type: `Response`
-    - Implementation: Handles 404 errors for undefined routes.
-
-3. **Dependencies and Relationships:**
-
-- **Imports:** `hono`, `cors`, Prisma client, utility functions (`render_txt`), and middleware functions (`userMiddleware`).
-- **Relationships:** This file orchestrates the entire backend logic, utilizing middleware for authentication and validation, and interacting with the database via the Prisma client.
-
-4. **Usage Example:**  N/A - This is the main application file.
-
-5. **Technical Notes:**
-    - Uses Hono for routing and middleware.
-    - Leverages Prisma for database interactions.
-    - Implements JWT for authentication.
-    - CORS is enabled for cross-origin requests.
-
----
-
-<a id='echoink-backend-src-usermiddleware-ts'></a>
-
-#### userMiddleware.ts
-
-*Path: echoink-backend/src/userMiddleware.ts*
-
-1. **Purpose:** This file contains middleware functions for user authentication, validation, and authorization in the EchoInk backend.
-
-2. **Key Functionality:**
-
-- **`hashPassword(password: string)`:** Hashes a given password using bcrypt.
-- **`gnerateToken(payload: JWTPayload, secret: string)`:** Generates a JWT token.
-- **`userCredsValidation(c: Context, next: Next)`:** Validates user credentials using Zod.
-- **`usernameAvailability(c: Context, next: Next)`:** Checks if a username is already taken.
-- **`authCreds(c: Context, next: Next)`:** Authenticates user credentials against the database.
-- **`userAuth(c: Context, next: Next)`:** Middleware for JWT-based authentication. Extracts user ID from the token and sets it in the context.
-- **`checkUserOwnership(c: Context, next: Next)`:** Verifies if the authenticated user owns a specific resource (e.g., a post or profile).
-
-3. **Dependencies and Relationships:**
-
-- **Imports:** `hono`, `bcryptjs`, `zod`, `hono/jwt`, Prisma client.
-- **Relationships:** This file is used by `index.ts` for handling user-related operations.  It depends on the Prisma client for database access.
-
-4. **Usage Example:**
+The `useEffect` hook is used to fetch author data when the component mounts or when the `authorId` changes:
 
 ```typescript
-// In index.ts
-app.post('/signup', userCredsValidation, usernameAvailability, async (c) => { 
-    // ... signup logic
+useEffect(() => {
+    const fetchAuthorData = async () => {
+        try {
+            const { user } = await getAuthorDetails(authorId);
+            setAuthor(user);
+            setPosts(user.posts);
+        } catch (error) {
+            console.error("Error fetching author data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchAuthorData();
+}, [authorId]);
+```
+
+This `useEffect` hook calls the `fetchAuthorData` function, which fetches the author data using `getAuthorDetails`, updates the component's state with the fetched data, and handles potential errors. The `[authorId]` dependency ensures that the effect is re-run whenever the `authorId` changes.
+
+#### Rendering the Author Profile
+
+The component renders the author's profile information using MUI components:
+
+```typescript
+<Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+    <Avatar
+        alt={author.username}
+        src={author.image_link || ""}
+        sx={{ width: 80, height: 80, mr: 2 }}
+    />
+    <Typography variant="h5">{author.username}</Typography>
+</Box>
+<Typography variant="body1">{author.bio || "No bio available."}</Typography>
+```
+
+This code snippet displays the author's avatar, username, and bio. It uses the `Avatar` component to display the author's profile picture, the `Typography` component to display the username and bio, and the `Box` component to provide layout and styling.
+
+### Usage Guide
+
+To use the `AuthorView` component, you need to:
+
+1.  Import the component into your desired location.
+2.  Wrap the component with a `Route` from `react-router-dom` and provide the correct path with the `authorId` parameter.
+3.  Ensure that the `authorId` parameter is correctly passed to the component through the URL.
+
+**Example:**
+
+```typescript
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import AuthorView from './pages/AuthorView';
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/author/:authorId" element={<AuthorView />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+```
+
+In this example, the `AuthorView` component will be rendered when the user navigates to a URL like `/author/123`.
+
+### Implementation Details and Gotchas
+
+*   **Error Handling:** The component includes basic error handling to catch potential errors during data fetching. However, more robust error handling may be required for production environments.
+*   **Loading State:** The component displays a loading state using `Skeleton` components while data is being fetched. This provides a better user experience by indicating that the data is loading.
+*   **Lazy Loading:** The `PostCard` component is lazily loaded using `React.lazy`. This improves the initial loading performance of the `AuthorView` component by deferring the loading of the `PostCard` component until it is actually needed.
+*   **API Endpoint:** The `BASE_URL` constant should be configured correctly to point to the correct backend API endpoint.
+*   **Data Structure:** The component expects the author data to be in a specific format, as defined by the `Author` type. Ensure that the backend API returns data in the expected format.
+
+### Common Issues and Troubleshooting
+
+*   **Author Not Found:** If the `authorId` is invalid or the author does not exist, the component will display an "Author not found" message. Verify that the `authorId` is correct and that the author exists in the database.
+*   **Data Fetching Errors:** If there are errors during data fetching, the component will log an error message to the console. Check the console for error messages and investigate the cause of the error. Potential causes include network connectivity issues, API endpoint errors, or incorrect API configuration.
+*   **Rendering Issues:** If the component is not rendering correctly, check the component's state and props to ensure that they are being updated correctly. Also, check the console for any error messages or warnings.
+
+### Advanced Configuration and Customization Options
+
+*   **Custom Styling:** The component can be customized using CSS or MUI's styling options. You can override the default styles of the MUI components to match your application's design.
+*   **Custom Data Fetching:** You can replace the default `getAuthorDetails` function with a custom function to fetch author data from a different source or to modify the data before it is rendered.
+*   **Custom Post Rendering:** You can replace the `PostCard` component with a custom component to render posts in a different way.
+
+### Performance Considerations and Optimization Strategies
+
+*   **Lazy Loading:** The `PostCard` component is lazily loaded to improve initial loading performance.
+*   **Memoization:** You can use `React.memo` to memoize the `AuthorView` component and the `PostCard` component to prevent unnecessary re-renders.
+*   **Code Splitting:** You can use code splitting to split the component's code into smaller chunks, which can be loaded on demand.
+*   **Image Optimization:** Optimize the author's profile picture to reduce its file size and improve loading performance.
+
+### Security Implications and Best Practices
+
+*   **Data Validation:** Validate the `authorId` parameter to prevent potential security vulnerabilities, such as SQL injection attacks.
+*   **Authentication and Authorization:** Implement proper authentication and authorization mechanisms to ensure that only authorized users can access author data.
+*   **Cross-Site Scripting (XSS) Protection:** Sanitize the author's bio and other user-generated content to prevent XSS attacks.
+*   **HTTPS:** Use HTTPS to encrypt communication between the client and the server to protect sensitive data.
+
+### Workflow Visualization
+
+The following diagram illustrates the workflow of displaying author profiles and posts:
+
+```mermaid
+graph LR
+    A[User Request Author Profile] --> B{Author ID Valid?};
+    B -- Yes --> C[Fetch Author Data from API];
+    B -- No --> D[Display Error: Invalid Author ID];
+    C --> E{Author Data Found?};
+    E -- Yes --> F[Render Author Profile and Posts];
+    E -- No --> G[Display Error: Author Not Found];
+    F --> H[User Views Author Profile];
+    G --> H;
+    D --> H;
+```
+
+**Explanation:**
+
+1.  The user requests an author profile.
+2.  The system checks if the author ID is valid.
+3.  If the author ID is valid, the system fetches the author data from the API.
+4.  If the author ID is invalid, the system displays an error message.
+5.  If the author data is found, the system renders the author profile and posts.
+6.  If the author data is not found, the system displays an error message.
+7.  The user views the author profile.
+
+### Component Relationships
+
+The `AuthorView` component depends on the following components and modules:
+
+```mermaid
+graph LR
+    A[AuthorView] --> B[PostCard];
+    A --> C[@mui/material];
+    A --> D[react-router-dom];
+    A --> E[BASE_URL];
+```
+
+**Explanation:**
+
+*   `AuthorView` uses `PostCard` to render individual posts.
+*   `AuthorView` uses `@mui/material` for UI components.
+*   `AuthorView` uses `react-router-dom` to access the `authorId` from the URL.
+*   `AuthorView` uses `BASE_URL` to construct the API endpoint URL.
+
+This documentation provides a comprehensive overview of the `AuthorView` component, covering its functionality, architecture, data flow, usage, and potential issues. It should serve as a valuable resource for developers working with this component.
+
+# Echoink Frontend and Backend System Documentation
+
+This document provides a comprehensive overview of the Echoink frontend and backend system, detailing its architecture, workflows, and implementation. It aims to equip developers with the knowledge necessary to understand, use, and maintain the system effectively.
+
+## 1. System Overview
+
+Echoink is a platform designed for creating and sharing content. The frontend, built with React, Recoil, and Material UI, provides the user interface for interacting with the platform. The backend, built with Hono, handles user authentication, post management, and data persistence using Prisma.
+
+### 1.1. Key Features
+
+*   **User Authentication:** Secure signup and sign-in functionality.
+*   **Post Management:** Create, read, update, and delete posts.
+*   **Profile Management:** User profile creation and editing.
+*   **Content Display:** Homepage displaying posts with filtering and search.
+*   **Rich Text Editor:** A rich text editor for creating engaging content.
+*   **Image Upload:** Upload images to Cloudinary for use in posts.
+*   **Tagging:** Categorize posts using tags.
+
+## 2. Architecture
+
+The Echoink system follows a modular architecture, separating the frontend and backend concerns. The frontend interacts with the backend via RESTful APIs.
+
+### 2.1. Frontend Architecture
+
+The frontend is structured using React components, managed with Recoil for state management, and styled with Material UI and Tailwind CSS.
+
+#### 2.1.1. Key Components
+
+*   **`App.tsx`:** The root component that defines the application's routing using `react-router-dom`. It uses React.lazy and Suspense for code splitting and lazy loading of components.
+*   **`Layout.tsx`:** Provides a consistent layout structure, including the `Navbar`.
+*   **`Navbar.tsx`:** Handles navigation, authentication status, and user profile retrieval. It uses `useRecoilState` to manage user data.
+*   **`Home.tsx`:** Displays the main feed of posts, including featured categories and latest insights. It fetches posts from the backend and uses `useRecoilState` to manage the post state.
+*   **`Write.tsx`:** Provides the interface for creating new posts, including a rich text editor, image upload, and tag management.
+*   **`Profile.tsx`:** Displays user profile information and allows editing.
+*   **`Signin.tsx` and `Signup.tsx`:** Handle user authentication.
+*   **`RichTextEditor.tsx`:** A rich text editor component built with Tiptap.
+*   **`SearchBar.tsx`:** A search bar component that allows users to search for posts.
+*   **`store.ts`:** Defines the Recoil atoms for managing global state, including user information and posts.
+
+#### 2.1.2. Data Flow
+
+The frontend uses Recoil.js for centralized state management. The `userAtom` stores user authentication information, and `postsState` stores the list of posts. Components like `Home.tsx`, `Write.tsx`, and `Profile.tsx` interact with these atoms to display and modify data.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Component
+    participant RecoilState
+
+    User->>Component: Interacts with component (e.g., Home.tsx)
+    Component->>RecoilState: Reads/Writes state (e.g., postsState)
+    RecoilState-->>Component: State updates
+    Component-->>User: UI reflects state changes
+```
+
+### 2.2. Backend Architecture
+
+The backend is built with Hono, a lightweight web framework for Cloudflare Workers. It uses Prisma as an ORM to interact with the database.
+
+#### 2.2.1. Key Components
+
+*   **`index.ts`:** The main entry point for the backend application. It defines the API routes and middleware.
+*   **`prisma/prismaClient.ts`:** Configures and exports the Prisma client for database interactions.
+*   **`src/userMiddleware.ts`:** Contains middleware functions for user authentication, authorization, and data validation.
+*   **`utils/render_txt.ts`:** Defines HTML templates for various responses, such as the homepage, 404 error page, and email verification page.
+*   **`utils/sendEmail.ts`:** Implements email sending functionality using SendGrid.
+*   **`utils/email_bodies.ts`:** Defines the email bodies for various email notifications.
+
+#### 2.2.2. API Endpoints
+
+The backend exposes the following API endpoints:
+
+*   `POST /signup`: Registers a new user.
+*   `POST /signin`: Authenticates an existing user.
+*   `GET /getprofile`: Retrieves user profile information.
+*   `PUT /updateprofile`: Updates user profile information.
+*   `POST /createpost`: Creates a new post.
+*   `DELETE /deletepost/:postId`: Deletes a post.
+*   `PUT /updatepost/:postId`: Updates a post.
+*   `GET /getbulk`: Retrieves all posts.
+*   `GET /posts?search={query}`: Retrieves posts based on a search query.
+*   `GET /getpost/:postId`: Retrieves a single post by ID.
+*   `GET /getauthor/:authorId`: Retrieves posts by author ID.
+
+#### 2.2.3. Data Flow
+
+The backend receives requests from the frontend, processes them using middleware and route handlers, interacts with the database via Prisma, and returns JSON responses.
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant Prisma
+    participant Database
+
+    Frontend->>Backend: API Request (e.g., POST /signup)
+    Backend->>Backend: Middleware (e.g., userCredsValidation)
+    Backend->>Prisma: Prisma Client Query (e.g., createUser)
+    Prisma->>Database: Database Operation
+    Database-->>Prisma: Data Response
+    Prisma-->>Backend: Data Response
+    Backend-->>Frontend: JSON Response
+```
+
+## 3. Workflows
+
+### 3.1. User Signup Workflow
+
+1.  The user enters their username, password, and confirm password in the `Signup.tsx` component.
+2.  The `handleSubmit` function in `Signup.tsx` is called.
+3.  The function validates the input fields and displays error messages using `react-toastify` if any validation fails.
+4.  A `POST` request is sent to the `/signup` endpoint on the backend.
+5.  The backend receives the request and applies the `userCredsValidation` middleware to validate the username and password.
+6.  The backend hashes the password using `bcrypt` and creates a new user in the database using Prisma.
+7.  The backend generates a JWT token for the user.
+8.  The backend sends a JSON response containing the token and user data to the frontend.
+9.  The frontend stores the token in `localStorage` and sets the user data in the `userAtom` using `useSetRecoilState`.
+10. The frontend navigates the user to the homepage.
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant Prisma
+    participant Database
+
+    Frontend->>Backend: POST /signup (username, password)
+    Backend->>Backend: userCredsValidation Middleware
+    alt Validation Failed
+        Backend-->>Frontend: Error Message
+    else Validation Passed
+        Backend->>Backend: hashPassword
+        Backend->>Prisma: createUser (hashedPassword, username)
+        Prisma->>Database: Insert User
+        Database-->>Prisma: User Data
+        Prisma-->>Backend: User Data
+        Backend->>Backend: gnerateToken
+        Backend-->>Frontend: JSON { token, user }
+        Frontend->>Frontend: localStorage.setItem("token", token)
+        Frontend->>Frontend: setUser(user)
+        Frontend->>Frontend: navigate("/")
+    end
+```
+
+### 3.2. Create Post Workflow
+
+1.  The user navigates to the `Write.tsx` component.
+2.  The user enters the post title, description, and tags. They can also upload an image.
+3.  The user clicks the "Publish" button.
+4.  The `handleSubmit` function in `Write.tsx` is called.
+5.  The function validates the input fields and displays error messages using `react-toastify` if any validation fails.
+6.  A `POST` request is sent to the `/createpost` endpoint on the backend with the post data.
+7.  The backend receives the request and applies the `userAuth` middleware to authenticate the user.
+8.  The backend creates a new post in the database using Prisma, associating it with the authenticated user.
+9.  The backend sends a JSON response indicating success or failure to the frontend.
+10. The frontend displays a success or error message using `react-toastify`.
+11. The frontend navigates the user to their profile page.
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant Prisma
+    participant Database
+
+    Frontend->>Backend: POST /createpost (title, description, tags, image_link)
+    Backend->>Backend: userAuth Middleware
+    alt Authentication Failed
+        Backend-->>Frontend: Error Message
+    else Authentication Passed
+        Backend->>Prisma: createPost (title, description, tags, image_link, userId)
+        Prisma->>Database: Insert Post
+        Database-->>Prisma: Post Data
+        Prisma-->>Backend: Post Data
+        Backend-->>Frontend: JSON { success, msg }
+        Frontend->>Frontend: toast.success/error
+        Frontend->>Frontend: navigate("/profile")
+    end
+```
+
+### 3.3. Get Profile Workflow
+
+1.  The `Profile.tsx` component is mounted.
+2.  The `useEffect` hook in `Profile.tsx` is called.
+3.  The hook checks if a token exists in `localStorage`. If not, the user is redirected to the sign-in page.
+4.  A `GET` request is sent to the `/getprofile` endpoint on the backend with the authorization token in the header.
+5.  The backend receives the request and applies the `userAuth` middleware to authenticate the user.
+6.  The backend retrieves the user profile information from the database using Prisma.
+7.  The backend sends a JSON response containing the user profile data to the frontend.
+8.  The frontend sets the profile data in the component's state using `setProfile`.
+9.  The frontend renders the user profile information.
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant Backend
+    participant Prisma
+    participant Database
+
+    Frontend->>Frontend: useEffect (Profile.tsx)
+    Frontend->>Backend: GET /getprofile (Authorization: Bearer token)
+    Backend->>Backend: userAuth Middleware
+    alt Authentication Failed
+        Backend-->>Frontend: Error Message
+        Frontend->>Frontend: navigate("/signin")
+    else Authentication Passed
+        Backend->>Prisma: findUnique (userId)
+        Prisma->>Database: Select User
+        Database-->>Prisma: User Data
+        Prisma-->>Backend: User Data
+        Backend-->>Frontend: JSON { success, user }
+        Frontend->>Frontend: setProfile(user)
+        Frontend->>Frontend: Render Profile
+    end
+```
+
+## 4. Code Examples
+
+### 4.1. Recoil State Definition (`store.ts`)
+
+```typescript
+import { atom } from 'recoil';
+
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  image_link?: string;
+  created_at: string;
+  posts: Post[];
+  _count: {
+    posts: number;
+  };
+}
+
+export const userAtom = atom<User | null>({
+  key: "userAtom",
+  default: null,
+});
+
+export const postsState = atom<Post[]>({
+  key: "postsState",
+  default: [],
 });
 ```
 
-5. **Technical Notes:**
-    - Uses bcrypt for password hashing.
-    - Uses Zod for schema validation.
-    - Implements JWT for authentication.
-    - `checkUserOwnership` middleware enhances security by verifying user ownership before allowing updates or deletions.
+This code defines two Recoil atoms: `userAtom` and `postsState`. `userAtom` stores the current user's information, and `postsState` stores the list of posts.
 
-
-These two files work closely together. `index.ts` defines the API routes and utilizes the middleware functions defined in `userMiddleware.ts` to handle authentication, validation, and authorization.  The Prisma client is a shared dependency, enabling database interactions from both files.  This separation of concerns improves code organization and maintainability.
-
----
-
-### echoink-backend/utils
-
-<a id='echoink-backend-utils-email_bodies-ts'></a>
-
-#### email_bodies.ts
-
-*Path: echoink-backend/utils/email_bodies.ts*
-
-1. **Purpose:** This file defines a function to generate HTML email bodies for email verification. It creates a formatted HTML email with a verification link.
-
-2. **Key Functionality:**
-
-- **`returnLinktoVerify(userId: string, email: string): string`**
-    - **Parameters:**
-        - `userId`:  The user's ID (string).
-        - `email`: The user's email address (string).
-    - **Return Type:**  HTML string representing the email body.
-    - **Implementation:** Constructs a verification link using the provided `userId` and `email`.  Embeds this link within a styled HTML email template. The template includes a header, personalized message, verification button, footer, and inline CSS for styling.
-    - **Fallback Mechanisms:**  No explicit error handling within this function. Assumes valid `userId` and `email` are provided.  Error handling should be implemented at the call site.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:** No external library dependencies. Uses template literals for string construction.
-- **Code Relationships:** This utility function is likely called by a service responsible for sending emails, such as the one in `sendEmail.ts` (File 3).
-
-4. **Usage Example:**
+### 4.2. Signup Form Submission (`signup.tsx`)
 
 ```typescript
-import { returnLinktoVerify } from './email_bodies';
-
-const userId = 'user123';
-const email = 'test@example.com';
-const emailBody = returnLinktoVerify(userId, email);
-// Send emailBody using an email sending service (e.g., from sendEmail.ts)
-```
-
-5. **Technical Notes:** The HTML email is constructed using a template literal, which allows for easy embedding of dynamic content. Inline CSS is used for styling to ensure compatibility across different email clients.
-
----
-
-<a id='echoink-backend-utils-render_txt-ts'></a>
-
-#### render_txt.ts
-
-*Path: echoink-backend/utils/render_txt.ts*
-
-1. **Purpose:** This file contains HTML templates for different web pages, including the homepage, a 404 error page, and an email verification success page.
-
-2. **Key Functionality:**
-
-- **`homepage`: string** - HTML template for the homepage.
-- **`status_404`: string** - HTML template for the 404 error page.
-- **`verified`: string** - HTML template for the email verification success page.
-
-    - **Implementation:** Each variable holds a complete HTML document string, including inline CSS for styling. The templates use semantic HTML elements and are designed with responsiveness in mind using media queries.
-    - **Fallback Mechanisms:** N/A. These are static templates. Error handling would be related to how these templates are served and rendered.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:** No external library dependencies. Uses template literals for HTML.
-- **Code Relationships:** These templates are likely used by a server-side rendering function or a static site generator to create the actual HTML pages served to the client.
-
-4. **Usage Example:**  A server could use these templates like so (example in Node.js with Express):
-
-```javascript
-import * as templates from './render_txt';
-// ... other imports and setup ...
-
-app.get('/', (req, res) => {
-  res.send(templates.homepage);
-});
-
-app.get('/verified', (req, res) => {
-  res.send(templates.verified);
-});
-
-// ... other routes ...
-
-app.use((req, res) => {
-  res.status(404).send(templates.status_404);
-});
-```
-
-5. **Technical Notes:**  The HTML templates use inline CSS for simplicity and to avoid issues with external stylesheets in email clients (in the case of the `verified` template).  The use of media queries ensures responsiveness across different screen sizes.
-
----
-
-<a id='echoink-backend-utils-sendemail-ts'></a>
-
-#### sendEmail.ts
-
-*Path: echoink-backend/utils/sendEmail.ts*
-
-1. **Purpose:** This file provides a function to send emails using the SendGrid API.
-
-2. **Key Functionality:**
-
-- **`sendEmail(email: string, subject: string, content: string): Promise<string>`**
-    - **Parameters:**
-        - `email`: Recipient's email address (string).
-        - `subject`: Email subject (string).
-        - `content`: HTML content of the email body (string).
-    - **Return Type:** A Promise that resolves to a success message string if the email is sent successfully, or rejects with an error if sending fails.
-    - **Implementation:** Uses the `@sendgrid/mail` library to send emails. Sets the SendGrid API key, constructs the email message object (including recipient, sender, subject, and HTML content), and then calls `sgMail.send()` to send the email. Logs the response status code.
-    - **Fallback Mechanisms:** Includes a `try...catch` block to handle potential errors during email sending.  Throws an error if the SendGrid API call fails.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:** Depends on the `@sendgrid/mail` library for interacting with the SendGrid API.
-- **Code Relationships:** This function likely uses the email bodies generated by `email_bodies.ts` (File 1) as the `content` parameter.
-
-4. **Usage Example:**
-
-```typescript
-import { sendEmail } from './sendEmail';
-import { returnLinktoVerify } from './email_bodies';
-
-const userId = 'user123';
-const email = 'test@example.com';
-const emailBody = returnLinktoVerify(userId, email);
-
-sendEmail(email, 'Email Verification', emailBody)
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
-```
-
-5. **Technical Notes:**  The SendGrid API key should be stored securely, ideally as an environment variable, and not directly in the code.  The function returns a promise, allowing for asynchronous handling of the email sending process.  The `try...catch` block provides basic error handling, but more robust error management might be needed in a production environment.
-
-
-**Inter-file Relationships Summary:**
-
-- `sendEmail.ts` (File 3) depends on `email_bodies.ts` (File 1) to generate the HTML content of the verification emails.
-- `sendEmail.ts` is the core function for sending emails, while `email_bodies.ts` provides a helper function for creating the email content.
-- `render_txt.ts` (File 2) provides HTML templates for various pages, including a success page for email verification, which is part of the overall user registration flow that involves `sendEmail.ts` and `email_bodies.ts`.  It is independent of the other two files but works in conjunction with them as part of the larger application.
-
----
-
-### echoink-frontend
-
-<a id='echoink-frontend-index-html'></a>
-
-#### index.html
-
-*Path: echoink-frontend/index.html*
-
-1.  **Purpose:** This file is the entry point for the Echo.ink frontend application. It sets up the basic HTML structure, links to necessary resources, and loads the main application script.
-
-2.  **Key Functionality:**
-
-    -   **`<div id="root"></div>`:** This div element serves as the container where the React application will be rendered.
-    -   **`<script type="module" src="/src/main.tsx"></script>`:** This script tag imports and executes the main application logic written in TypeScript (main.tsx). The `type="module"` attribute enables the use of ES modules.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Dependencies:** This file implicitly depends on the `main.tsx` file for the application logic and the `/vite.svg` file for the favicon.
-    -   **Relationships:** This file is the root of the HTML document and is the starting point for loading the entire frontend application. It is served by the development server configured in `vite.config.ts`.
-
-4.  **Usage Example:** This file is automatically loaded by the browser when a user accesses the Echo.ink application.
-
-5.  **Technical Notes:** The use of a single `<div id="root"></div>` is a standard practice in single-page applications (SPAs) where the entire content is dynamically managed by a JavaScript framework like React.
-
----
-
-<a id='echoink-frontend-tailwind-config-js'></a>
-
-#### tailwind.config.js
-
-*Path: echoink-frontend/tailwind.config.js*
-
-1.  **Purpose:** This file configures Tailwind CSS, a utility-first CSS framework, for the project. It specifies the locations of HTML and JavaScript files where Tailwind classes are used and allows for custom theme extensions.
-
-2.  **Key Functionality:**
-
-    -   **`content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}']`:** This array tells Tailwind which files to scan for used classes. This ensures that only the necessary CSS is generated, optimizing the final bundle size.  This configuration includes the `index.html` (File 1) and all files within the `src` directory with specified extensions.
-    -   **`theme: { extend: {} }`:** This object allows for customizing the default Tailwind theme.  Currently empty, it provides a location to override or extend existing styles.
-    -   **`plugins: []`:** This array allows for adding Tailwind plugins to extend its functionality.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Dependencies:** This file depends on the `tailwindcss` npm package.
-    -   **Relationships:** This configuration file is used by the Tailwind CSS engine during the build process managed by `vite.config.ts` (File 3).
-
-4.  **Usage Example:**  Tailwind classes are used directly in the application's components (within the `src` directory). The configuration in this file ensures that the corresponding CSS styles are generated and included in the final build.
-
-5.  **Technical Notes:**  The `content` array is crucial for purging unused styles and keeping the production CSS bundle size small.
-
----
-
-<a id='echoink-frontend-vite-config-ts'></a>
-
-#### vite.config.ts
-
-*Path: echoink-frontend/vite.config.ts*
-
-1.  **Purpose:** This file configures Vite, a build tool and development server, for the Echo.ink frontend. It defines plugins, CSS processing, optimization settings, and server configurations.
-
-2.  **Key Functionality:**
-
-    -   **`plugins: [react()]`:** This configures Vite to use the `@vitejs/plugin-react` plugin, which enables support for React development, including JSX transpilation and fast refresh.
-    -   **`css: { postcss: { plugins: [tailwindcss(), autoprefixer()] } }`:** This section configures CSS processing. It uses `tailwindcss` (configured in File 2) and `autoprefixer` to add vendor prefixes for cross-browser compatibility.
-    -   **`optimizeDeps`:** This section pre-bundles dependencies to improve performance. It specifically includes several libraries like `react-dropzone`, `tailwind-merge`, `framer-motion`, and Tiptap editor extensions.
-    -   **`server: { watch: { usePolling: true } }`:** This configures the development server to use polling for file system changes. This is often necessary in environments like Docker or WSL where file system events are not reliably propagated.
-    -   **`build: { sourcemap: false }`:** This disables source maps in the production build to reduce bundle size.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Dependencies:** This file depends on various npm packages, including `vite`, `@vitejs/plugin-react`, `tailwindcss`, `autoprefixer`, and those listed in `optimizeDeps`.
-    -   **Relationships:** This file orchestrates the build process for the frontend application. It uses the configuration from `tailwind.config.js` (File 2) and serves `index.html` (File 1).
-
-4.  **Usage Example:**  Developers run commands like `vite` (for development server) and `vite build` (for production build) which use this configuration file.
-
-5.  **Technical Notes:**  Disabling source maps in production reduces the bundle size but makes debugging production issues more difficult. The `usePolling: true` setting is crucial for consistent development server behavior in certain environments. The `optimizeDeps` configuration improves initial load performance by pre-bundling frequently used dependencies.  The inclusion of specific Tiptap extensions suggests rich text editing capabilities within the application.
-
----
-
-### echoink-frontend/src
-
-<a id='echoink-frontend-src-app-css'></a>
-
-#### App.css
-
-*Path: echoink-frontend/src/App.css*
-
-1.  **Purpose:** This file sets up the base styling for the application using Tailwind CSS. It imports the base styles, components, and utilities provided by Tailwind.
-
-2.  **Key Functionality:** This file doesn't contain any custom CSS or JavaScript code. It leverages Tailwind CSS for styling, which is configured elsewhere.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Imports & Usage:** Imports Tailwind CSS base, components, and utilities.
-    -   **Code Relationships:** This CSS file is applied globally to the application and affects the styling of all components. It's linked in the `index.html` file (implicitly through `index.css` which imports it).
-
-4.  **Usage Example:** N/A (styling file)
-
-5.  **Technical Notes:** Using Tailwind CSS provides a utility-first approach to styling, promoting consistency and maintainability.
-
----
-
-<a id='echoink-frontend-src-app-tsx'></a>
-
-#### App.tsx
-
-*Path: echoink-frontend/src/App.tsx*
-
-1.  **Purpose:** This file defines the main application structure and routing using React Router. It sets up the top-level component and manages navigation between different pages.
-
-2.  **Key Functionality:**
-
-    -   Uses `BrowserRouter` to enable client-side routing.
-    -   `Routes` component defines the different routes and their corresponding components.
-    -   `Route` components map specific URLs to components like `Homepage`, `SinglePostView`, `AuthorView`, authentication pages, `Profile`, and `Write`.
-    -   `React.Suspense` with `LoadingAnimation` provides a loading indicator while components are being lazily loaded.
-    -   `ToastContainer` from `react-toastify` is used for displaying notifications.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Imports & Usage:** Imports `react-router-dom` for routing, `react`, `react-toastify`, and various page components.
-    -   **Code Relationships:** This file serves as the entry point for routing and dictates which component is rendered based on the URL. It depends on the `Layout` component for the overall page structure.
-
-4.  **Usage Example:** When a user navigates to `/post/123`, the `SinglePostView` component is rendered within the `Layout`.
-
-5.  **Technical Notes:** Lazy loading with `React.Suspense` improves initial load time by only loading components when needed. The `ToastContainer` is placed outside the `Routes` to ensure persistent notifications across different routes.
-
----
-
-<a id='echoink-frontend-src-index-css'></a>
-
-#### index.css
-
-*Path: echoink-frontend/src/index.css*
-
-1.  **Purpose:** This file sets up global styles and imports the Google Font "Courier Prime." It also imports Tailwind CSS directives.
-
-2.  **Key Functionality:**
-
-    -   Imports the "Courier Prime" font and sets it as the default font for the application.
-    -   Includes Tailwind CSS directives (base, components, utilities) to apply Tailwind styles.
-    -   Defines a `fade-in` animation using keyframes.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Imports & Usage:** Imports a Google Font and Tailwind CSS directives.
-    -   **Code Relationships:** This CSS file is globally applied and affects all components. It's imported in `main.tsx`. It also imports `App.css`.
-
-4.  **Usage Example:** The `fade-in` animation can be applied to elements by adding the `animate-fade-in` class.
-
-5.  **Technical Notes:** Setting the font globally ensures consistency across the application. The `!important` flag is generally discouraged but might be necessary to override conflicting styles.
-
----
-
-<a id='echoink-frontend-src-main-tsx'></a>
-
-#### main.tsx
-
-*Path: echoink-frontend/src/main.tsx*
-
-1.  **Purpose:** This file is the main entry point for the React application. It renders the `App` component within a `RecoilRoot` and handles the initial rendering to the DOM.
-
-2.  **Key Functionality:**
-
-    -   Uses `createRoot` from `react-dom/client` for efficient rendering.
-    -   Wraps the `App` component with `RecoilRoot` to provide a Recoil state management context.
-    -   Uses `Suspense` for lazy loading the `App` component with a fallback loading animation.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Imports & Usage:** Imports `react-dom/client`, `index.css`, `react`, `recoil`, and the `App` component.
-    -   **Code Relationships:** This file bootstraps the entire application and renders the root component into the DOM element with the ID 'root'.
-
-4.  **Usage Example:** N/A (entry point)
-
-5.  **Technical Notes:** Using `createRoot` is the recommended way to render React 18 applications for better performance.
-
----
-
-<a id='echoink-frontend-src-vite-env-d-ts'></a>
-
-#### vite-env.d.ts
-
-*Path: echoink-frontend/src/vite-env.d.ts*
-
-1.  **Purpose:** This file provides TypeScript definitions for Vite environment variables.
-
-2.  **Key Functionality:**  Includes the `/// <reference types="vite/client" />` directive, which allows TypeScript to understand Vite-specific types like `import.meta.env`.
-
-3.  **Dependencies and Relationships:**
-
-    -   **Imports & Usage:**  Implicitly depends on Vite's type definitions.
-    -   **Code Relationships:** This file is essential for using Vite environment variables correctly in TypeScript.
-
-4.  **Usage Example:** N/A (type definition file)
-
-5.  **Technical Notes:** This file is crucial for type safety when working with environment variables in a Vite project.
-
-
-This documentation provides a comprehensive overview of the provided files, their functionalities, dependencies, and relationships within the project. It emphasizes how these files work together to form the application's structure, handle routing, manage styling, and interact with the DOM. The use of lazy loading, Recoil for state management, and Tailwind CSS are highlighted as key architectural decisions.
-
----
-
-### echoink-frontend/src/components
-
-<a id='echoink-frontend-src-components-richtexteditor-tsx'></a>
-
-#### RichTextEditor.tsx
-
-*Path: echoink-frontend/src/components/RichTextEditor.tsx*
-
-1. **Purpose:** This component provides a rich text editor using Tiptap, allowing users to create and edit formatted text content with various styling options. It receives the initial content and emits updates whenever the content changes.
-
-2. **Key Functionality:**
-
-- **`RichTextEditor` (functional component):**
-    - **`content` (string):** The initial HTML content for the editor.
-    - **`onChange` (function):** Callback function triggered when the editor content changes, receiving the updated HTML content as a string.
-    - **Implementation:**
-        - Uses `@tiptap/react` to initialize and manage the editor.
-        - Configures Tiptap extensions for basic text formatting (StarterKit), links, and placeholders.
-        - Customizes link styling and placeholder text.
-        - Listens to the `onUpdate` event to call `onChange` with the updated HTML content.
-        - Renders the editor using `EditorContent`.
-        - Includes a toolbar with buttons for common formatting options (headings, bold, italic, lists, quotes, code, and links).
-        - Uses Lucide React for icons in the toolbar.
-        - Styles the editor output using CSS-in-JS.
-    - **Fallback Mechanisms:** No specific fallback mechanisms are implemented. Errors during editor initialization or updates might lead to the component rendering `null`.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `@tiptap/react`: For the core editor functionality.
-    - `@tiptap/starter-kit`: For basic text formatting extensions.
-    - `@tiptap/extension-link`: For link functionality.
-    - `@tiptap/extension-placeholder`: For placeholder text.
-    - `lucide-react`: For icons in the toolbar.
-- **Code Relationships:** This component is likely used within other components that require rich text input, such as a blog post creation or editing form.
-
-4. **Usage Example:**
-
-```tsx
-<RichTextEditor 
-  content="<p>Initial content</p>" 
-  onChange={(newContent) => console.log(newContent)} 
-/>
-```
-
-5. **Technical Notes:**
-
-- The editor's styling is embedded within the component using `<style>`.  This keeps the styling localized but could be extracted to a separate CSS file for better organization if the project grows.
-- The `openOnClick` property for links is set to `false` to prevent default link behavior and allow custom handling if needed.
-
----
-
-<a id='echoink-frontend-src-components-searchbar-tsx'></a>
-
-#### SearchBar.tsx
-
-*Path: echoink-frontend/src/components/SearchBar.tsx*
-
-1. **Purpose:** This component provides a search bar that allows users to search for posts. It fetches posts from the backend based on the search query and updates the application's state with the results.
-
-2. **Key Functionality:**
-
-- **`SearchBar` (functional component):**
-    - **`query` (string):** The current search query.
-    - **`_posts` (Post[]):** The fetched posts, stored in Recoil state.
-    - **`fetchPosts` (async function):** Fetches posts from the backend based on the provided `searchQuery`. Handles empty or whitespace-only queries by fetching bulk posts. Updates the `postsState` in Recoil. Includes error handling.
-    - **`debouncedFetchPosts` (function):** A debounced version of `fetchPosts` using Lodash's `debounce` to limit the rate of API calls.
-    - **Implementation:**
-        - Uses `useState` to manage the search query.
-        - Uses `useRecoilState` to access and update the `postsState`.
-        - Uses `useEffect` with `query` as a dependency to trigger the `debouncedFetchPosts` function whenever the query changes.
-        - Clears the posts if the query is empty.
-    - **Fallback Mechanisms:** Includes error handling within `fetchPosts` to catch and log errors during the fetch process.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`: For core React functionality.
-    - `recoil`: For state management.
-    - `lodash/debounce`: For debouncing function calls.
-    - `../store/store`: For the `postsState` atom.
-    - `../pages/Home`: For the `BASE_URL` constant.
-- **Code Relationships:** This component interacts with the `postsState` in the Recoil store and depends on the backend API for fetching posts. It's likely used within a page or component that displays the fetched posts.
-
-4. **Usage Example:**
-
-```tsx
-<SearchBar />
-```
-
-5. **Technical Notes:**
-
-- Uses Lodash's `debounce` to optimize performance and prevent excessive API calls.
-- Handles empty or whitespace-only search queries by fetching bulk posts.  This provides a default view when the search bar is empty.
-
----
-
-<a id='echoink-frontend-src-components-layout-tsx'></a>
-
-#### layout.tsx
-
-*Path: echoink-frontend/src/components/layout.tsx*
-
-1. **Purpose:** This component provides a basic layout structure for the application, including a header, main content area, and footer.
-
-2. **Key Functionality:**
-
-- **`Layout` (functional component):**
-    - **`children` (ReactNode):** The content to be rendered within the main content area.
-    - **Implementation:**
-        - Uses React's `React.lazy` and `Suspense` to lazy-load the `Navbar` component for improved initial load performance.
-        - Structures the layout using `header`, `main`, and `footer` elements.
-        - Renders the provided `children` within the `main` element.
-        - Includes a simple footer with copyright information.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`: For core React functionality.
-    - `./navbar`: For the navigation bar component.
-- **Code Relationships:** This component is a top-level layout component and is likely used to wrap other pages or components in the application. It depends on the `Navbar` component.
-
-4. **Usage Example:**
-
-```tsx
-<Layout>
-  <p>Page content</p>
-</Layout>
-```
-
-5. **Technical Notes:**
-    - Lazy loading the `Navbar` component can improve initial page load performance, especially if the navbar is complex.
-
----
-
-<a id='echoink-frontend-src-components-loadingcomponent-tsx'></a>
-
-#### loadingcomponent.tsx
-
-*Path: echoink-frontend/src/components/loadingcomponent.tsx*
-
-1. **Purpose:** This component displays a simple loading animation.
-
-2. **Key Functionality:**
-
-- **`LoadingAnimation` (functional component):**
-    - **Implementation:**
-        - Uses `framer-motion` to create a rotating animation.
-        - Centers the animation on the screen.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `framer-motion`: For the animation.
-
-4. **Usage Example:**
-
-```tsx
-<LoadingAnimation />
-```
-
----
-
-<a id='echoink-frontend-src-components-navbar-tsx'></a>
-
-#### navbar.tsx
-
-*Path: echoink-frontend/src/components/navbar.tsx*
-
-1. **Purpose:** This component renders the application's navigation bar, handling user authentication, routing, and search functionality.
-
-2. **Key Functionality:**
-
-- **`Navbar` (functional component):**
-    - **`menuOpen` (boolean):** State for controlling the mobile menu visibility.
-    - **`isAuthenticated` (boolean):** State for tracking user authentication status.
-    - **`user` (User | null):** State for storing user profile information.
-    - **`scrolled` (boolean):** State for tracking whether the user has scrolled down the page.
-    - **`handleNavigation` (function):** Navigates to the specified route and closes the mobile menu.
-    - **`handleSignOut` (function):** Signs the user out by removing the token from local storage, updating state, and navigating to the home page.
-    - **`checkAuth` (function):** Checks for the presence of a token in local storage to determine authentication status.
-    - **`fetchUserProfile` (async function):** Fetches the user profile from the backend if authenticated. Handles errors and updates state accordingly.
-    - **Implementation:**
-        - Uses `useState` to manage the menu state, authentication status, user profile, and scroll state.
-        - Uses `useRecoilState` to access and update the `userAtom`.
-        - Uses `useEffect` to handle scroll effects, authentication checks, profile fetching, and click-outside events for the mobile menu.
-        - Uses `useNavigate` for routing.
-        - Lazy-loads the `SearchBar` component.
-        - Renders different navigation elements based on authentication status.
-        - Includes a dropdown menu for authenticated users with profile options.
-    - **Fallback Mechanisms:** Includes error handling within `fetchUserProfile` to catch and handle errors during profile fetching.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`: For core React functionality.
-    - `lucide-react`: For icons.
-    - `react-router-dom`: For routing.
-    - `recoil`: For state management.
-    - `../store/store`: For the `userAtom`.
-    - `../pages/Home`: For the `BASE_URL` constant.
-    - `../components/SearchBar`: For the search bar component.
-- **Code Relationships:** This component interacts with the `userAtom` in the Recoil store, the backend API for profile fetching, and the `SearchBar` component. It's a core part of the application's layout and handles user authentication and navigation.
-
-4. **Usage Example:**
-
-```tsx
-<Navbar />
-```
-
-5. **Technical Notes:**
-
-- Uses lazy loading for the `SearchBar` to improve initial load performance.
-- Implements a scroll effect to change the navbar's appearance on scroll.
-- Handles user authentication and profile fetching.
-
----
-
-<a id='echoink-frontend-src-components-postcard-tsx'></a>
-
-#### postCard.tsx
-
-*Path: echoink-frontend/src/components/postCard.tsx*
-
-1. **Purpose:** This component displays a single blog post card, showing a preview of the post content and allowing navigation to the full post.  It also handles optional edit and delete actions.
-
-2. **Key Functionality:**
-
-- **`BlogPostCard` (functional component):**
-    - **`post` (PostData):** The data for the blog post to be displayed.
-    - **`onDelete` (function, optional):** Callback function triggered when the delete button is clicked.
-    - **`onEdit` (function, optional):** Callback function triggered when the edit button is clicked.
-    - **`showActions` (boolean, optional):** Controls the visibility of the edit and delete buttons. Defaults to `false`.
-    - **`formatDate` (function):** Formats a date string into a localized date format. Includes error handling.
-    - **`readTime` (number):** Calculates the estimated read time for the post.
-    - **`handlePostClick` (function):** Navigates to the full post view when the card is clicked.
-    - **`handleUsernameClick` (function):** Navigates to the author's profile when the username or avatar is clicked.
-    - **`sanitizedDescription` (function):** Sanitizes the post description using DOMPurify to prevent XSS vulnerabilities.  Handles decoding and potential errors during sanitization.
-    - **`handleActionClick` (function):** Handles clicks on the edit and delete buttons, preventing event propagation and calling the respective callback functions.
-    - **Implementation:**
-        - Uses Material UI components for styling and layout.
-        - Formats dates, calculates read time, and sanitizes the post description.
-        - Handles navigation to the full post and author profile.
-        - Conditionally renders edit and delete buttons based on the `showActions` prop and the presence of callback functions.
-        - Uses `useState` to manage the image error state.
-    - **Fallback Mechanisms:** Includes error handling for date formatting and description sanitization.  Provides a fallback image if the post image fails to load.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react-router-dom`: For navigation.
-    - `@mui/material`: For UI components.
-    - `@mui/icons-material`: For icons.
-    - `date-fns/formatDistanceToNow`: For date formatting.
-    - `react`: For core React functionality.
-    - `dompurify`: For sanitizing HTML.
-- **Code Relationships:** This component is likely used within a list or grid of posts. It depends on the `PostData` type and interacts with routing to navigate to other parts of the application.
-
-4. **Usage Example:**
-
-```tsx
-<BlogPostCard post={postData} onDelete={handleDeletePost} onEdit={handleEditPost} showActions={true} />
-```
-
-5. **Technical Notes:**
-
-- Uses DOMPurify to sanitize HTML content for security.
-- Calculates read time based on word count.
-- Handles image loading errors gracefully.
-- Provides clear separation of concerns and good code organization.
-
-
-**Inter-file Relationships and Dependencies:**
-
-- `RichTextEditor` is likely used within a post creation/editing form, which would then interact with backend APIs to save the content.
-- `SearchBar` uses `postsState` from `store/store` and fetches data from the backend API, updating the state with the results.  This state is then likely used by a component that renders a list of `PostCard` components.
-- `Layout` uses `Navbar`, providing the overall structure of the application.
-- `Navbar` uses `SearchBar` and manages user authentication state (using `userAtom` from `store/store`), affecting routing and displayed content.
-- `PostCard` receives individual post data and handles navigation to the full post view, potentially using data fetched by `SearchBar` and displayed within a component using the `Layout` structure.  It also uses `onDelete` and `onEdit` handlers, which would likely trigger updates to the `postsState` managed by `SearchBar`.
-- `LoadingComponent` is a standalone component used to display loading states, potentially while `SearchBar` is fetching data or other asynchronous operations are in progress.
-
-
-This documentation provides a comprehensive overview of the provided code files, their functionality, dependencies, and how they interact within the system.  It emphasizes technical details, code flow, and best practices, offering insights into the architecture and design decisions.
-
----
-
-### echoink-frontend/src/pages
-
-<a id='echoink-frontend-src-pages-authorview-tsx'></a>
-
-#### AuthorView.tsx
-
-*Path: echoink-frontend/src/pages/AuthorView.tsx*
-
-1. **Purpose:** This file defines the `AuthorView` component, responsible for displaying the profile and posts of a specific author. It fetches author data and renders their information and posts dynamically.
-
-2. **Key Functionality:**
-
-- **`getAuthorDetails(userId: string)`:**
-    - **Parameters:** `userId` (string): The ID of the author to fetch.
-    - **Return Type:** `Promise<any>`: A promise that resolves to the author data object.
-    - **Implementation:** Fetches author details from the backend API using the provided `userId`. Includes error handling within a `try...catch` block.
-- **`AuthorView` component:**
-    - **Implementation:** Uses `useParams` to get the `authorId` from the URL.  `useEffect` fetches author data and posts when the `authorId` changes.  Renders a loading skeleton while fetching.  Displays author information (username, avatar, post count, join date) and their posts using the `PostCard` component.  Handles the case where the author is not found.
-    - **Fallback Mechanisms:** Displays a "Author not found" message if the author data is null after fetching.  Uses a loading skeleton while data is being fetched.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-router-dom`, `@mui/material`: For basic React components and styling.
-    - `PostCard`: Displays individual post information.
-    - `BASE_URL` (from `Home.tsx`): The base URL for the backend API.
-    - `Post` (from `store.ts`): The type definition for a post.
-- **Code Relationships:**
-    - Depends on the backend API for author data.
-    - Uses the `PostCard` component to render individual posts.
-    - Shares the `BASE_URL` with `Home.tsx`.
-    - Uses the `Post` type from the global store.
-
-4. **Usage Example:**  The `AuthorView` component is used to display an author's profile and posts. It's typically accessed via a URL like `/author/:authorId`.
-
-5. **Technical Notes:**  Uses React's `Suspense` and `lazy` loading for the `PostCard` component to improve initial load time.  The component handles loading and error states gracefully.  The extraction of tags from posts is optimized to avoid unnecessary re-renders.
-
----
-
-<a id='echoink-frontend-src-pages-home-tsx'></a>
-
-#### Home.tsx
-
-*Path: echoink-frontend/src/pages/Home.tsx*
-
-1. **Purpose:** This file defines the `Homepage` component, the main landing page of the application. It displays a list of posts, featured categories, and latest insights.
-
-2. **Key Functionality:**
-
-- **`FeaturedCategories` component:**
-    - **Parameters:** `posts` (Post[]), `onCategoryClick` (function), `selectedCategory` (string | null)
-    - **Implementation:**  Displays up to four featured categories based on the tags of the posts.  Allows users to filter posts by category.
-- **`LatestInsights` component:**
-    - **Parameters:** `posts` (Post[])
-    - **Implementation:** Displays insights about top contributors and popular topics based on the provided posts.
-- **`Homepage` component:**
-    - **Implementation:** Fetches posts from the backend API using `useEffect`.  Uses Recoil to manage the `posts` state.  Renders `PostCard` components for each post.  Includes loading skeletons and error handling.  Filters posts based on the selected category.
-    - **Fallback Mechanisms:** Displays a "No posts found" message if no posts are available.  Uses loading skeletons while data is being fetched.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-toastify`, `recoil`, `@mui/material`, `@mui/icons-material`: For React components, state management, styling, and icons.
-    - `PostCard`: Displays individual post information.
-    - `postsState`, `Post`, `InsighthspostsState` (from `store.ts`):  Recoil state and type definitions.
-- **Code Relationships:**
-    - Depends on the backend API for post data.
-    - Uses the `PostCard` component to render individual posts.
-    - Uses Recoil for state management.
-    - Exports `BASE_URL` which is used by other components.
-
-4. **Usage Example:** The `Homepage` component is the default route of the application.
-
-5. **Technical Notes:** Uses Recoil for state management, allowing for efficient updates and sharing of post data.  The `LatestInsights` component dynamically calculates top contributors and tag distribution.  The `FeaturedCategories` component provides interactive filtering.
-
----
-
-<a id='echoink-frontend-src-pages-profile-tsx'></a>
-
-#### Profile.tsx
-
-*Path: echoink-frontend/src/pages/Profile.tsx*
-
-1. **Purpose:** This file defines the `Profile` component, which displays the user's profile information and their posts. It allows users to edit their profile and manage their posts.
-
-2. **Key Functionality:**
-
-- **`validateFile(file: File)`:**
-    - **Parameters:** `file` (File): The file to validate.
-    - **Return Type:** boolean: True if the file is valid, otherwise throws an error.
-    - **Implementation:** Validates the uploaded file size and type.
-- **`Profile` component:**
-    - **Implementation:** Fetches user profile data using `useEffect`.  Handles profile editing, image uploads to Cloudinary, post deletion, and post editing.  Uses dialogs for confirmation and editing.  Includes loading and error states.
-    - **Fallback Mechanisms:** Displays loading and error messages.  Handles image upload errors.  Confirms post deletion.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-router-dom`, `lucide-react`, `react-toastify`, `@mui/material`: For React components, routing, icons, notifications, and UI elements.
-    - `PostCard`: Displays individual post information.
-    - `BASE_URL` (from `Home.tsx`): The base URL for the backend API.
-    - `Post` (from `store.ts`): The type definition for a post.
-- **Code Relationships:**
-    - Depends on the backend API for user data and post management.
-    - Uses Cloudinary for image uploads.
-    - Uses the `PostCard` component to render user posts.
-    - Shares the `BASE_URL` with `Home.tsx`.
-    - Uses the `Post` type from the global store.
-
-4. **Usage Example:** The `Profile` component is typically accessed via the `/profile` route.
-
-5. **Technical Notes:**  Implements file validation before uploading to Cloudinary.  Uses dialogs to improve user experience for editing and deleting posts.  Handles loading, error, and no profile states gracefully.
-
----
-
-<a id='echoink-frontend-src-pages-singlepostview-tsx'></a>
-
-#### SinglePostView.tsx
-
-*Path: echoink-frontend/src/pages/SinglePostView.tsx*
-
-1. **Purpose:** This file defines the `SinglePostView` component, responsible for displaying a single post in detail.
-
-2. **Key Functionality:**
-
-- **`SinglePostView` component:**
-    - **Implementation:** Uses `useParams` to get the `postId` from the URL.  Fetches post data using `useEffect`.  Renders post details, including title, author, date, tags, image, and description.  Handles loading and error states.  Provides social sharing buttons and a copy link button.  Sanitizes the post description using DOMPurify.
-    - **Fallback Mechanisms:** Displays a loading skeleton while fetching data.  Handles image loading errors.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-router-dom`, `@mui/material`, `date-fns`, `react-share`, `react-toastify`, `lucide-react`, `dompurify`: For React components, routing, styling, date formatting, social sharing, notifications, icons, and HTML sanitization.
-    - `BASE_URL` (from `Home.tsx`): The base URL for the backend API.
-    - `Post` (from `store.ts`): The type definition for a post.
-- **Code Relationships:**
-    - Depends on the backend API for post data.
-    - Shares the `BASE_URL` with `Home.tsx`.
-    - Uses the `Post` type from the global store.
-
-4. **Usage Example:** The `SinglePostView` component is used to display a single post. It's typically accessed via a URL like `/post/:postId`.
-
-5. **Technical Notes:** Uses `DOMPurify` to sanitize the post description for security.  Handles image loading errors gracefully.  Provides a user-friendly way to share posts on social media.
-
----
-
-<a id='echoink-frontend-src-pages-write-tsx'></a>
-
-#### Write.tsx
-
-*Path: echoink-frontend/src/pages/Write.tsx*
-
-1. **Purpose:** This file defines the `Write` component, which allows users to create and publish new posts.
-
-2. **Key Functionality:**
-
-- **`PreviewContent` component:**
-    - **Parameters:** `post` (PostForm)
-    - **Implementation:** Renders a preview of the post content.
-- **`Write` component:**
-    - **Implementation:** Handles post creation, image uploads to Cloudinary, tag management, form validation, and preview functionality.  Uses Framer Motion for animations.  Includes loading state and unsaved changes warning.
-    - **Fallback Mechanisms:** Handles image upload errors.  Validates form input.  Warns users about unsaved changes.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-router-dom`, `react-toastify`, `framer-motion`, `lucide-react`, `react-dropzone`, `tailwind-merge`: For React components, routing, notifications, animations, icons, drag-and-drop functionality, and styling.
-    - `RichTextEditor`: A custom component for rich text editing.
-- **Code Relationships:**
-    - Depends on the backend API for post creation.
-    - Uses Cloudinary for image uploads.
-    - Uses a custom `RichTextEditor` component.
-
-4. **Usage Example:** The `Write` component is typically accessed via the `/write` route.
-
-5. **Technical Notes:**  Implements form validation and displays error messages.  Provides a preview mode to see how the post will look before publishing.  Uses Framer Motion for smooth transitions between edit and preview modes.  Warns users about unsaved changes before leaving the page.
-
----
-
-<a id='echoink-frontend-src-pages-signin-tsx'></a>
-
-#### signin.tsx
-
-*Path: echoink-frontend/src/pages/signin.tsx*
-
-1. **Purpose:** This file defines the `Signin` component, which allows users to sign in to the application.
-
-2. **Key Functionality:**
-
-- **`Signin` component:**
-    - **Implementation:** Handles user sign-in, including form submission, input validation, API calls, error handling, and state management using Recoil.  Provides a demo account option.
-    - **Fallback Mechanisms:** Handles API errors and displays error messages.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-toastify`, `recoil`, `react-router-dom`, `lucide-react`: For React components, notifications, state management, routing, and icons.
-    - `BASE_URL` (from `Home.tsx`): The base URL for the backend API.
-    - `userAtom` (from `store.ts`): The Recoil atom for user data.
-- **Code Relationships:**
-    - Depends on the backend API for user authentication.
-    - Shares the `BASE_URL` with `Home.tsx`.
-    - Uses the `userAtom` to store user data in the global state.
-
-4. **Usage Example:** The `Signin` component is typically accessed via the `/signin` route.
-
-5. **Technical Notes:** Uses Recoil for managing user state.  Provides clear error messages to the user.  Includes a demo account option for easy testing.
-
----
-
-<a id='echoink-frontend-src-pages-signup-tsx'></a>
-
-#### signup.tsx
-
-*Path: echoink-frontend/src/pages/signup.tsx*
-
-1. **Purpose:** This file defines the `Signup` component, which allows users to create new accounts.
-
-2. **Key Functionality:**
-
-- **`Signup` component:**
-    - **Implementation:** Handles user sign-up, including form submission, input validation, API calls, error handling, and state management using Recoil.  Uses Material UI components for styling and form elements.
-    - **Fallback Mechanisms:** Handles API errors and displays error messages.  Validates form input.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:**
-    - `react`, `react-router-dom`, `recoil`, `react-toastify`, `@mui/material`, `@mui/icons-material`: For React components, routing, state management, notifications, UI elements, and icons.
-    - `BASE_URL` (from `Home.tsx`): The base URL for the backend API.
-    - `userAtom` (from `store.ts`): The Recoil atom for user data.
-- **Code Relationships:**
-    - Depends on the backend API for user registration.
-    - Shares the `BASE_URL` with `Home.tsx`.
-    - Uses the `userAtom` to store user data in the global state.
-
-4. **Usage Example:** The `Signup` component is typically accessed via the `/signup` route.
-
-5. **Technical Notes:** Uses Material UI for styling and form elements.  Provides clear error messages to the user.  Handles loading state during form submission.  Uses Recoil for managing user state.
-
-
-These files work together to provide a complete blogging platform experience.  `Home.tsx` displays the main list of posts, while `SinglePostView.tsx` shows individual posts.  `AuthorView.tsx` displays author profiles and their posts.  `Write.tsx` allows users to create new posts, while `Profile.tsx` lets users manage their profiles and posts.  `signin.tsx` and `signup.tsx` handle user authentication and registration.  They share dependencies like `BASE_URL` from `Home.tsx` and the `Post` type and Recoil state from `store.ts` (not provided but implied).  This modular design promotes code reusability and maintainability.
-
----
-
-### echoink-frontend/src/store
-
-<a id='echoink-frontend-src-store-store-ts'></a>
-
-#### store.ts
-
-*Path: echoink-frontend/src/store/store.ts*
-
-1. **Purpose:** This file defines and exports global application state using Recoil atoms for user data and posts. It serves as a central store for managing and sharing data across the frontend application.
-
-2. **Key Functionality:**
-
-- **`Post` Interface:** Defines the structure for a post object, including its properties like `id`, `title`, `description`, `created_at`, `image_link`, `is_edited`, `last_edited`, `tags`, and associated `User` information.
-
-- **`User` Interface:** Defines the structure for a user object, including properties like `id`, `username`, `email`, `image_link`, `created_at`, an array of `Post` objects, and a `_count` object for post counts.
-
-- **`userAtom`:**
-    - Type: `Recoil.Atom<User | null>`
-    - Default: `null`
-    - This atom stores the currently logged-in user's data or `null` if no user is logged in.  Components can subscribe to this atom to reactively update when the user's information changes.
-
-- **`postsState`:**
-    - Type: `Recoil.Atom<Post[]>`
-    - Default: `[]`
-    - This atom stores an array of `Post` objects.  It likely represents a general collection of posts, perhaps fetched from an API endpoint.
-
-- **`InsighthspostsState`:**
-    - Type: `Recoil.Atom<Post[]>`
-    - Default: `[]`
-    - This atom also stores an array of `Post` objects. The name suggests it might hold posts related to insights, potentially a specific category or filtered subset of posts.
-
-3. **Dependencies and Relationships:**
-
-- **Imports & Usage:** Imports `atom` from the `recoil` library to create and manage application state.
-- **Code Relationships:** This file is central to the frontend application's state management.  Components will likely subscribe to these atoms to access and update the user and post data.  Actions that fetch or modify user/post data will update these atoms, triggering re-renders in subscribed components.
-
-4. **Usage Example:**
-
-```typescript
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { userAtom, postsState } from './store';
-
-function MyComponent() {
-  const user = useRecoilValue(userAtom);
-  const setPosts = useSetRecoilState(postsState);
-
-  const fetchPosts = async () => {
-    const posts = await fetch('/api/posts'); // Example API call
-    setPosts(posts);
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useSetRecoilState } from "recoil";
+import { userAtom } from "../store/store";
+import { toast } from "react-toastify";
+import { BASE_URL } from "./Home";
+
+export default function Signup() {
+  const navigate = useNavigate();
+  const setUser = useSetRecoilState(userAtom);
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`${BASE_URL}/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        setUser(data.user);
+        toast.success("Account created successfully!");
+        navigate("/");
+      } else {
+        toast.error(data.msg || "Failed to create account");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create account");
+    }
   };
 
   return (
-    <div>
-      {user ? <p>Welcome, {user.username}!</p> : <p>Please log in.</p>}
-      {/* ... display posts from postsState ... */}
-    </div>
+    // JSX for signup form
+    null
   );
 }
 ```
 
-5. **Technical Notes:**
+This code demonstrates the signup form submission process. It fetches the `/signup` endpoint, handles the response, and updates the Recoil state and `localStorage` upon successful signup.
 
-- Using Recoil for state management provides a centralized and reactive way to manage data across the application.
-- The separation of `postsState` and `InsighthspostsState` suggests a potential need for better state organization.  Depending on the application's complexity, consider consolidating or refactoring state to improve maintainability.  If "Insights" posts are a distinct category, consider adding a field to the `Post` interface to categorize posts instead of maintaining separate arrays.  This would simplify state management and filtering.
-- No error handling or loading state is implemented within the store itself.  Components consuming this state should handle potential loading and error scenarios.
+### 4.3. Fetching Posts (`Home.tsx`)
 
----
+```typescript
+import { useEffect, useState } from "react";
+import { useRecoilState } from "recoil";
+import { postsState, Post } from "../store/store";
+import { toast } from "react-toastify";
+import { BASE_URL } from "./Home";
 
+export default function Homepage() {
+  const [posts, setPosts] = useRecoilState<Post[]>(postsState);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/getbulk`);
+        const data = await res.json();
+
+        if (data.success) {
+          setPosts(data.posts);
+          toast.success("Posts loaded successfully");
+        } else {
+          toast.error(data.msg);
+        }
+      } catch (error) {
+        toast.error("Failed to fetch posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  return (
+    // JSX for displaying posts
+    null
+  );
+}
+```
+
+This code demonstrates how to fetch posts from the backend and update the `postsState` Recoil atom.
+
+### 4.4. Creating a Post (`Write.tsx`)
+
+```typescript
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import RichTextEditor from '../components/RichTextEditor';
+
+const BASE_URL = 'https://echoink-backend.cloudflare-apis.workers.dev';
+
+interface PostForm {
+    title: string;
+    description: string;
+    image_link: string;
+    tags: string[];
+}
+
+export default function Write() {
+    const [formData, setFormData] = useState<PostForm>({
+        title: "",
+        description: "",
+        image_link: "",
+        tags: [],
+    });
+    const navigateTo = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            toast.error("Please sign in to create a post");
+            navigateTo("/signin");
+        }
+    }, [navigateTo]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) throw new Error("Authentication required");
+
+            const response = await fetch(`${BASE_URL}/createpost`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Failed to create post');
+
+            toast.success("Post published successfully!");
+            navigateTo("/profile");
+        } catch (error: any) {
+            toast.error(error.message || "Failed to publish post");
+        }
+    };
+
+    return (
+        // JSX for creating a post
+        null
+    );
+}
+```
+
+This code demonstrates how to create a new post by sending a `POST` request to the `/createpost` endpoint.
+
+### 4.5. User Authentication Middleware (`index.ts`)
+
+```typescript
+import { Context, Next } from 'hono';
+import { verify } from 'hono/jwt';
+
+export const userAuth = async (c: Context, next: Next) => {
+  const token = c.req.header('Authorization')?.split(' ')[1];
+
+  if (!token) {
+    return c.json({ msg: "Unauthorized", success: false }, 401);
+  }
+
+  try {
+    const decoded = await verify(token, 'secret');
+    if (decoded) {
+      c.set('userId', decoded.id);
+      await next();
+    } else {
+      return c.json({ msg: "Unauthorized", success: false }, 401);
+    }
+  } catch (error) {
+    return c.json({ msg: "Unauthorized", success: false }, 401);
+  }
+};
+```
+
+This code demonstrates the `userAuth` middleware, which authenticates the user by verifying the JWT token in the `Authorization` header.
+
+## 5. Usage Guide
+
+### 5.1. Setting up the Development Environment
+
+1.  Clone the repository.
+2.  Install the dependencies for both the frontend and backend.
+3.  Configure the environment variables, including the database connection string, Cloudinary credentials, and SendGrid API key.
+4.  Start the frontend and backend development servers.
+
+### 5.2. Creating a New Post
+
+1.  Navigate to the `Write` page.
+2.  Enter the post title, description, and tags.
+3.  Upload an image (optional).
+4.  Click the "Publish" button.
+
+### 5.3. Editing User Profile
+
+1.  Navigate to the `Profile` page.
+2.  Edit the profile information, including the username, email, and profile picture.
+3.  Click the "Save" button.
+
+## 6. Implementation Details and Gotchas
+
+*   **Recoil State Management:** Ensure that all components that need access to the global state are wrapped with the `RecoilRoot` component.
+*   **Authentication:** The JWT token is stored in `localStorage`. Ensure that the token is securely stored and handled.
+*   **Error Handling:** Implement comprehensive error handling throughout the application to provide informative error messages to the user.
+*   **Cloudinary:** Configure the Cloudinary upload preset and cloud name correctly.
+*   **SendGrid:** Replace `'SENDGRID_API_KEY'` with your actual SendGrid API key in `sendEmail.ts`.
+
+## 7. Common Issues and Troubleshooting
+
+*   **Authentication Issues:** Verify that the JWT token is valid and correctly stored in `localStorage`.
+*   **Database Connection Issues:** Ensure that the database connection string is correct and that the database server is running.
+*   **Image Upload Issues:** Verify that the Cloudinary credentials are correct and that the image file size is within the allowed limit.
+*   **Email Sending Issues:** Verify that the SendGrid API key is correct and that the email sending quota has not been exceeded.
+
+## 8. Advanced Configuration and Customization Options
+
+*   **Theming:** Customize the application's theme using Material UI's theming capabilities.
+*   **Routing:** Add new routes to the application by modifying the `App.tsx` component.
+*   **Middleware:** Add new middleware functions to the backend to handle specific requests or perform custom logic.
+*   **Database Schema:** Modify the database schema by editing the Prisma schema file.
+
+## 9. Performance Considerations and Optimization Strategies
+
+*   **Code Splitting:** Use code splitting to reduce the initial load time of the application.
+*   **Lazy Loading:** Use lazy loading to load components only when they are needed.
+*   **Caching:** Implement caching to reduce the number of database queries.
+*   **Image Optimization:** Optimize images to reduce their file size.
+
+## 10. Security Implications and Best Practices
+
+*   **Authentication:** Use strong passwords and implement multi-factor authentication.
+*   **Authorization:** Implement proper authorization checks to ensure that users can only access the resources they are authorized to access.
+*   **Data Validation:** Validate all user input to prevent injection attacks.
+*   **Cross-Site Scripting (XSS):** Sanitize all user input to prevent XSS attacks.
+*   **Cross-Site Request Forgery (CSRF):** Implement CSRF protection to prevent CSRF attacks.
+*   **HTTPS:** Use HTTPS to encrypt all communication between the client and server.
+*   **Regular Security Audits:** Conduct regular security audits to identify and address potential vulnerabilities.
+
+  ## EchoInk Post Display and Sharing System: Technical Documentation
+
+This document provides a comprehensive technical overview of the EchoInk post display and sharing system. It covers the frontend components responsible for rendering individual posts and facilitating sharing, as well as the backend middleware involved in user authentication and authorization.
+
+### 1. System Overview
+
+The EchoInk post display and sharing system allows users to view individual blog posts, share them on social media, and interact with author profiles. This system is crucial for content discoverability, user engagement, and platform growth. The core functionality revolves around fetching post data from the backend, rendering it in a user-friendly format, and providing sharing options.  User authentication is handled by backend middleware to ensure secure access and data integrity.
+
+### 2. Technical Architecture
+
+The system comprises the following key components:
+
+*   **`SinglePostView.tsx`**:  This React component fetches and displays a single post based on its ID. It handles data fetching, error handling, and rendering of post content, metadata, and sharing options.
+*   **`postCard.tsx`**: This React component displays a summary of a post, used in lists of posts. It also provides navigation to the full `SinglePostView`. It can optionally include edit and delete actions if the user has permission.
+*   **`userMiddleware.ts`**: This backend module provides middleware functions for user authentication, authorization, and data validation. It ensures that only authorized users can access certain resources and that data is consistent and secure.
+
+**Component Relationships:**
+
+*   `SinglePostView.tsx` imports `Post` type from `../store/store` and uses `BASE_URL` which is defined in `./Home`. It also utilizes `toast` from `react-toastify` for user notifications.
+*   `postCard.tsx` uses `useNavigate` from `react-router-dom` to handle navigation to the single post view and author profiles.
+*   `userMiddleware.ts` imports `Context` and `Next` from `hono`, uses `bcryptjs` for password hashing, `zod` for data validation, `hono/jwt` for JWT signing and verification, and `getPrismaClient` from `../prisma/prismaClient` to interact with the database.
+
+**Data Flow Diagram:**
+
+```mermaid
+graph LR
+    A[User Request: /post/:postId] --> B(SinglePostView.tsx);
+    B --> C{Fetch Post Data from API};
+    C --> D[Backend API: /post/:postId];
+    D --> E(Database);
+    E --> D;
+    D --> F{Return Post Data};
+    F --> B;
+    B --> G(Render Post);
+    G --> H[User View];
+```
+
+This diagram illustrates the basic data flow when a user requests a single post.  The frontend component fetches data from the backend API, which retrieves it from the database.  The component then renders the post for the user.
+
+### 3. Main Workflows and Data Flows
+
+#### 3.1. Displaying a Single Post
+
+1.  **User Request:** The user navigates to a URL like `/post/123`.
+2.  **`SinglePostView.tsx`:** The `useParams` hook extracts the `postId` (e.g., "123") from the URL.
+3.  **Data Fetching:** The `useEffect` hook triggers the `fetchPostData` function.
+4.  **API Call:** `fetchPostData` makes a GET request to the backend API endpoint `BASE_URL/post/${postId}`.
+5.  **Backend Processing:** The backend retrieves the post data from the database based on the `postId`.
+6.  **Data Rendering:** The backend sends the post data back to the frontend.
+7.  **State Update:** `SinglePostView.tsx` updates its state with the received post data using `setPost(data.post)`.
+8.  **UI Rendering:** The component renders the post title, description, image (if available), author information, and sharing options.  Skeletons are displayed while the data is loading.
+
+**Code Example (Data Fetching in `SinglePostView.tsx`):**
+
+```typescript
+  useEffect(() => {
+    const fetchPostData = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/post/${postId}`);
+        const data = await response.json();
+        setPost(data.post);
+      } catch (error) {
+        console.error("Error fetching post data", error);
+      }
+    };
+
+    if (postId) {
+      fetchPostData();
+    }
+  }, [postId]);
+```
+
+#### 3.2. Sharing a Post
+
+1.  **User Interaction:** The user clicks on a share button (Facebook, Twitter, WhatsApp, or Copy Link).
+2.  **Social Media Sharing:** If the user clicks on a social media button (Facebook, Twitter, WhatsApp), the corresponding `react-share` component opens a sharing dialog with the post URL and title.
+3.  **Copy Link:** If the user clicks the "Copy Link" button, the `handleCopyLink` function is executed.
+4.  **Clipboard Access:** `handleCopyLink` uses `navigator.clipboard.writeText(window.location.href)` to copy the current URL to the user's clipboard.
+5.  **Toast Notification:** A success message is displayed using `toast.success("Link copied to clipboard!")`.
+
+**Code Example (Copy Link Function in `SinglePostView.tsx`):**
+
+```typescript
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copied to clipboard!");
+  };
+```
+
+#### 3.3. User Authentication and Authorization
+
+The `userMiddleware.ts` file provides several middleware functions to handle user authentication and authorization. Here's a breakdown of the key functions:
+
+*   **`hashPassword(password: string)`:**  Hashes a password using bcrypt for secure storage.
+*   **`gnerateToken(payload: JWTPayload, secret: string)`:** Generates a JWT token for user authentication.
+*   **`userCredsValidation(c: Context, next: Next)`:** Validates user credentials (username and password) using Zod.
+*   **`usernameAvailability(c: Context, next: Next)`:** Checks if a username is available during registration.
+*   **`authCreds(c: Context, next: Next)`:** Authenticates user credentials by comparing the provided password with the hashed password in the database.
+*   **`userAuth(c: Context, next: Next)`:**  Authenticates a user based on a JWT token provided in the `Authorization` header.
+*   **`checkUserOwnership(c: Context, next: Next)`:** Checks if the user owns the resource they are trying to access.
+
+**Workflow: User Authentication**
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant Database
+
+    User->>Frontend: Enters username and password
+    Frontend->>Backend: Sends login request with credentials
+    Backend->>Backend: Calls authCreds middleware
+    Backend->>Database: Queries database for user with given username
+    alt User found
+        Database-->>Backend: Returns user data
+        Backend->>Backend: Compares provided password with stored hash
+        alt Passwords match
+            Backend->>Backend: Generates JWT token
+            Backend-->>Frontend: Sends JWT token to frontend
+            Frontend->>User: User logged in
+        else Passwords do not match
+            Backend-->>Frontend: Sends error message "INVALID_CREDS"
+            Frontend->>User: Displays error message
+        end
+    else User not found
+        Database-->>Backend: Returns user not found
+        Backend-->>Frontend: Sends error message "FATAL : user not found"
+        Frontend->>User: Displays error message
+    end
+```
+
+This diagram illustrates the user authentication workflow. The frontend sends the user's credentials to the backend, which then verifies them against the database. If the credentials are valid, the backend generates a JWT token and sends it back to the frontend.
+
+**Code Example (User Authentication Middleware):**
+
+```typescript
+export const authCreds = async(c:Context,next:Next)=>{
+    const {username,password} = await c.req.json()
+    const prisma  = await getPrismaClient(c);
+    const user = await prisma.user.findUnique({
+        where : {
+            username
+        }
+    })
+    if(user){
+        const verified = await bcrypt.compare(password,user.password)
+        if(verified){
+            await next()
+        }else{
+            return c.json({
+                msg : "Error : INVALID_CREDS, please try again!",success : false
+            })
+        }
+    }else{
+        return c.json({
+            msg : "FATAL : user not found",success : false
+        })
+    }
+}
+```
+
+### 4. Practical Usage Guide
+
+#### 4.1. Displaying a Post Card
+
+To display a post card, import the `BlogPostCard` component and pass the post data as a prop:
+
+```typescript
+import BlogPostCard from "./components/postCard";
+
+const MyComponent = ({ postData }) => {
+  return (
+    <BlogPostCard post={postData} />
+  );
+};
+```
+
+#### 4.2. Implementing User Authentication
+
+To implement user authentication, use the middleware functions provided in `userMiddleware.ts`. For example, to protect a route that requires authentication, use the `userAuth` middleware:
+
+```typescript
+import { Hono } from 'hono'
+import { userAuth } from './userMiddleware';
+
+const app = new Hono()
+
+app.get('/protected', userAuth, (c) => {
+  return c.json({ message: 'This is a protected route' })
+})
+```
+
+### 5. Important Implementation Details and Gotchas
+
+*   **Date Formatting:** The `formatDate` function in both `SinglePostView.tsx` and `postCard.tsx` uses `toLocaleDateString` to format dates. Ensure that the locale ("en-IN") is appropriate for your target audience.
+*   **Description Sanitization:** The `sanitizedDescription` function in `postCard.tsx` uses `DOMPurify` to sanitize the post description. This is crucial to prevent XSS vulnerabilities.  Pay attention to the `ALLOWED_TAGS` and `ALLOWED_ATTR` options to ensure that the desired HTML elements and attributes are preserved.
+*   **Error Handling:**  Both frontend components include basic error handling for data fetching and image loading.  Implement more robust error handling and logging in a production environment.
+*   **JWT Secret:** The `JWT_SECRET` environment variable in `userMiddleware.ts` must be securely stored and managed.  Do not expose this secret in your codebase.
+*   **CORS Configuration:** Ensure that your backend API is properly configured to handle Cross-Origin Resource Sharing (CORS) requests from the frontend.
+
+### 6. Common Issues and Troubleshooting
+
+*   **Post Not Found:** If a post is not found, `SinglePostView.tsx` will display a loading skeleton indefinitely.  Implement a more user-friendly error message.
+*   **Image Loading Errors:** If an image fails to load, `SinglePostView.tsx` and `postCard.tsx` will display a fallback image or placeholder.  Consider using an image optimization service to improve image loading performance and reliability.
+*   **Authentication Failures:** If user authentication fails, the `userAuth` middleware will return an error message.  Ensure that the JWT token is valid and that the user has the necessary permissions.
+*   **Database Connection Errors:** If the backend is unable to connect to the database, the API will return an error.  Check your database connection settings and ensure that the database server is running.
+
+### 7. Advanced Configuration and Customization Options
+
+*   **Customizing the Post Card:**  You can customize the appearance of the `BlogPostCard` component by modifying its CSS styles or by passing additional props to control its behavior.
+*   **Implementing Custom Sharing Options:**  You can add custom sharing options to `SinglePostView.tsx` by integrating with other social media APIs or by implementing your own sharing functionality.
+*   **Extending the User Model:**  You can extend the user model in the backend by adding additional fields to the `User` table in your database schema.  You will also need to update the `userMiddleware.ts` file to handle these new fields.
+*   **Custom Error Handling:** Implement custom error handling logic in the frontend and backend to provide more informative error messages and improve the user experience.
+
+### 8. Performance Considerations and Optimization Strategies
+
+*   **Code Splitting:** Use code splitting to reduce the initial load time of your application.
+*   **Caching:** Implement caching on the backend to reduce database load and improve API response times.
+*   **Image Optimization:** Optimize images to reduce their file size and improve loading performance.
+*   **Database Optimization:** Optimize your database queries to improve performance.
+*   **CDN:** Use a Content Delivery Network (CDN) to serve static assets such as images and JavaScript files.
+
+### 9. Security Implications and Best Practices
+
+*   **XSS Prevention:**  Always sanitize user input to prevent Cross-Site Scripting (XSS) vulnerabilities.  The `sanitizedDescription` function in `postCard.tsx` provides an example of how to sanitize HTML content.
+*   **CSRF Protection:**  Implement Cross-Site Request Forgery (CSRF) protection to prevent malicious websites from making unauthorized requests on behalf of your users.
+*   **Authentication and Authorization:**  Use strong authentication and authorization mechanisms to protect your API endpoints and data.  The `userMiddleware.ts` file provides several middleware functions for user authentication and authorization.
+*   **Data Validation:**  Validate all user input to prevent data injection attacks.  The `userCredsValidation` function in `userMiddleware.ts` provides an example of how to validate user credentials.
+*   **Secure Storage of Secrets:**  Store sensitive information such as API keys and database passwords securely.  Do not expose these secrets in your codebase.
+*   **Regular Security Audits:**  Conduct regular security audits to identify and address potential vulnerabilities.
