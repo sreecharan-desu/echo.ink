@@ -1,3 +1,65 @@
+# Repository Documentation
+
+## Repository Architecture
+
+```mermaid
+graph TB
+    A[Repository] --> B[Modules: 2]
+    A --> C[Sections: 4]
+    B --> D[Core Components]
+    B --> E[UI Components]
+    B --> F[Utilities]
+    C --> G[API Documentation]
+    C --> H[Implementation Guides]
+    C --> I[Code Examples]
+    
+    style A fill:#10b981,stroke:#059669,color:#ffffff
+    style B fill:#3b82f6,stroke:#2563eb,color:#ffffff
+    style C fill:#8b5cf6,stroke:#7c3aed,color:#ffffff
+```
+
+## Table of Contents
+
+### 1. Author Profile Display and Prisma Client Optimization
+
+No description available
+
+**Sections:**
+
+
+**1.** [Accelerated Prisma Client Initialization for Hono Applications](#section-link-module-module_miscellaneous_utilities-section-optimized_accelerated_prisma_client_initialization_for_hono_applications)
+
+**2.** [Echoink: Displaying Author Profiles and Posts with React](#section-link-module-module_miscellaneous_utilities-section-optimized_echoink:_displaying_author_profiles_and_posts_with_react)
+
+---
+
+### 2. Frontend Data Flow & State Management for Single Post Views
+
+No description available
+
+**Sections:**
+
+
+**1.** [Centralized State Management with Recoil.js for User and Post Data in Echoink Frontend](#section-link-module-module_api_endpoints_routing-section-optimized_centralized_state_management_with_recoil.js_for_user_and_post_data_in_echoink_frontend)
+
+**2.** [Displaying and Sharing Individual Posts: A React Component for EchoInk](#section-link-module-module_api_endpoints_routing-section-optimized_displaying_and_sharing_individual_posts:_a_react_component_for_echoink)
+
+---
+
+
+
+## Navigation Guide
+
+- **Modules**: Browse through organized code modules in the left sidebar
+- **Sections**: Each module contains multiple documentation sections
+- **Search**: Use the search bar to quickly find specific content
+- **Headings**: Use the right sidebar to navigate within long documents
+- **Actions**: Copy or download any section content using the toolbar buttons
+
+Start exploring by selecting a module from the sidebar!
+
+
+
 ## Prisma Client Initialization and Acceleration in Echoink Backend
 
 This document details the `prismaClient.ts` module within the Echoink backend, focusing on its role in initializing and configuring the Prisma client for database interactions. The module leverages Prisma's edge client and the `prisma-extension-accelerate` extension to provide a performant and scalable database access layer within a Hono application.
